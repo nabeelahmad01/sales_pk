@@ -744,6 +744,49 @@ export default function AdminBrandsPage() {
           .search-box {
             max-width: none;
           }
+
+          .page-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .modal {
+            margin: 1rem;
+            max-height: calc(100vh - 2rem);
+          }
+
+          .modal form {
+            padding: 1rem;
+          }
+
+          .modal-header {
+            padding: 1rem;
+          }
+
+          .form-actions {
+            flex-direction: column;
+          }
+
+          .form-actions button {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .filter-select {
+            width: 100%;
+          }
+
+          .no-results {
+            padding: 2rem 1rem;
+          }
+
+          .no-results-icon {
+            font-size: 2.5rem;
+          }
+
+          .results-count {
+            font-size: 0.75rem;
+          }
         }
       `}</style>
     </>

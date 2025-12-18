@@ -107,6 +107,34 @@ export default function BrandCard({ brand }: BrandCardProps) {
           color: var(--primary-purple);
           transform: translateX(4px);
         }
+
+        @media (max-width: 480px) {
+          .brand-card {
+            padding: 1rem;
+            gap: 0.75rem;
+          }
+
+          .brand-logo {
+            width: 52px;
+            height: 52px;
+          }
+
+          .brand-name {
+            font-size: 1rem;
+          }
+
+          .brand-category {
+            font-size: 0.6875rem;
+          }
+
+          .sales-count {
+            font-size: 0.8125rem;
+          }
+
+          .brand-arrow {
+            display: none;
+          }
+        }
       `}</style>
     </Link>
   );

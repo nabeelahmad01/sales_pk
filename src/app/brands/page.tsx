@@ -103,6 +103,60 @@ export default function BrandsPage() {
           .brands-grid {
             grid-template-columns: 1fr;
           }
+
+          .page-header {
+            padding: 2rem 0;
+          }
+
+          .page-header h1 {
+            font-size: 1.75rem;
+          }
+
+          .brands-page {
+            padding: 2rem 0 3rem;
+          }
+
+          .all-brands {
+            margin-bottom: 3rem;
+          }
+
+          .category-section {
+            margin-bottom: 2rem;
+          }
+
+          .category-header {
+            margin-bottom: 1rem;
+          }
+
+          .category-header h2 {
+            font-size: 1.25rem;
+          }
+
+          .category-icon {
+            font-size: 1.5rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .page-header {
+            padding: 1.5rem 0;
+          }
+
+          .page-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .page-header p {
+            font-size: 0.875rem;
+          }
+
+          .brands-page {
+            padding: 1.5rem 0 2rem;
+          }
+
+          .brands-grid {
+            gap: 1rem;
+          }
         }
       `}</style>
     </>

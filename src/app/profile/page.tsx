@@ -315,6 +315,59 @@ export default function ProfilePage() {
             flex-direction: column;
             text-align: center;
           }
+
+          .profile-header .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .profile-page {
+            padding: 1.5rem 0;
+          }
+
+          .profile-header {
+            padding: 1.5rem;
+          }
+
+          .profile-avatar {
+            width: 64px;
+            height: 64px;
+            font-size: 1.5rem;
+          }
+
+          .profile-info h1 {
+            font-size: 1.25rem;
+          }
+
+          .profile-info p {
+            font-size: 0.875rem;
+          }
+
+          .favorites-section {
+            padding: 1.5rem;
+          }
+
+          .favorites-section h2 {
+            font-size: 1.125rem;
+          }
+
+          .favorites-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .empty-favorites {
+            padding: 2rem 1rem;
+          }
+
+          .empty-icon {
+            font-size: 3rem;
+          }
+
+          .favorite-image {
+            height: 120px;
+          }
         }
       `}</style>
     </>

@@ -193,6 +193,47 @@ export default function SaleCard({ sale }: SaleCardProps) {
         .days-left.urgent {
           color: #EF4444;
         }
+
+        @media (max-width: 480px) {
+          .sale-card-image {
+            height: 160px;
+          }
+
+          .sale-card-content {
+            padding: 1rem;
+          }
+
+          .sale-card-title {
+            font-size: 1rem;
+          }
+
+          .sale-card-desc {
+            font-size: 0.8125rem;
+            margin-bottom: 0.75rem;
+          }
+
+          .sale-card-prices {
+            margin-bottom: 0.75rem;
+          }
+
+          .sale-price {
+            font-size: 1.125rem;
+          }
+
+          .sale-card-discount {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+          }
+
+          .featured-badge {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.625rem;
+          }
+
+          .sale-card-meta {
+            padding-top: 0.75rem;
+          }
+        }
       `}</style>
     </Link>
   );

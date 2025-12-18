@@ -358,6 +358,48 @@ export default function AboutPage() {
           .cta-card {
             padding: 2rem;
           }
+
+          .page-header {
+            padding: 2rem 0;
+          }
+
+          .page-header h1 {
+            font-size: 1.75rem;
+          }
+
+          .story-content h2 {
+            font-size: 1.5rem;
+          }
+
+          .stat-value {
+            font-size: 2rem;
+          }
+
+          .story-visual {
+            flex-direction: column;
+          }
+
+          .visual-card {
+            padding: 1.5rem;
+          }
+
+          .big-emoji {
+            font-size: 3rem;
+          }
+
+          .step-card {
+            padding: 1.5rem;
+          }
+
+          .cta-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .cta-actions .btn {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </>

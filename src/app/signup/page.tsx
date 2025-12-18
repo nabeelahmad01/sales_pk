@@ -332,6 +332,37 @@ export default function SignupPage() {
           font-size: 0.875rem;
           color: var(--text-muted);
         }
+
+        @media (max-width: 480px) {
+          .auth-page {
+            padding: 1rem;
+          }
+
+          .auth-card {
+            padding: 1.5rem;
+          }
+
+          .auth-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .auth-logo {
+            font-size: 1.25rem;
+          }
+
+          .form-group input {
+            padding: 0.75rem;
+          }
+
+          .google-btn {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .auth-form {
+            gap: 1rem;
+          }
+        }
       `}</style>
     </>
   );

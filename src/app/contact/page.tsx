@@ -399,6 +399,53 @@ export default function ContactPage() {
             padding: 1.5rem;
           }
         }
+
+        @media (max-width: 480px) {
+          .contact-page {
+            padding: 2rem 0;
+          }
+
+          .page-header {
+            padding: 1.5rem 0;
+          }
+
+          .page-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .form-card h2 {
+            font-size: 1.25rem;
+          }
+
+          .form-group input,
+          .form-group select,
+          .form-group textarea {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .info-card {
+            padding: 1rem;
+          }
+
+          .info-icon {
+            font-size: 1.5rem;
+          }
+
+          .info-card h3 {
+            font-size: 0.875rem;
+          }
+
+          .social-btn {
+            width: 36px;
+            height: 36px;
+          }
+
+          .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+          }
+        }
       `}</style>
     </>
   );

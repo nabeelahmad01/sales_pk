@@ -397,6 +397,41 @@ export default function AdminSalesPage() {
           .search-box {
             max-width: none;
           }
+
+          .page-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .page-header .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .filter-select {
+            width: 100%;
+          }
+
+          .results-count {
+            font-size: 0.75rem;
+          }
+
+          .no-results {
+            padding: 2rem 1rem;
+          }
+
+          .no-results-icon {
+            font-size: 2.5rem;
+          }
+
+          .no-results h3 {
+            font-size: 1rem;
+          }
+
+          .no-results p {
+            font-size: 0.875rem;
+          }
         }
       `}</style>
     </>
