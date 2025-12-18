@@ -3,11 +3,15 @@ import dbConnect from '@/lib/mongodb';
 import Brand from '@/models/Brand';
 
 // GET all brands
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     
-    const brands = await Brand.find({ isActive: true }).sort({ name: 1 });
+    const { searchParams } = new URL(request.url);
+    const showAll = searchParams.get('all') === 'true';
+    
+    const filter = showAll ? {} : { isActive: true };
+    const brands = await Brand.find(filter).sort({ name: 1 });
     
     return NextResponse.json({ success: true, data: brands });
   } catch (error) {

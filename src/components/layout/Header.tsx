@@ -1,9 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
+import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
+  const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -14,9 +16,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="logo">
             <span className="logo-icon">🏷️</span>
-            <span className="logo-text">
-              Show<span className="logo-highlight">Sales</span>
-            </span>
+            <span className="logo-text">ShowSales</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -30,9 +30,9 @@ export default function Header() {
 
           {/* Search Bar */}
           <div className={`search-container ${isSearchOpen ? 'open' : ''}`}>
-            <input
-              type="text"
-              placeholder="Search sales..."
+            <input 
+              type="text" 
+              placeholder="Search sales..." 
               className="search-input"
             />
             <button className="search-btn">
@@ -54,14 +54,28 @@ export default function Header() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </button>
-            <Link href="/favorites" className="icon-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </Link>
-            <Link href="/admin" className="btn btn-primary btn-sm">
-              Admin
-            </Link>
+
+            {status === 'loading' ? (
+              <div className="auth-loading">...</div>
+            ) : session ? (
+              <>
+                <Link href="/profile" className="icon-btn" title="My Profile">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </Link>
+                <button onClick={() => signOut({ callbackUrl: '/' })} className="btn btn-outline btn-sm">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="btn btn-outline btn-sm">Login</Link>
+                <Link href="/signup" className="btn btn-primary btn-sm">Sign Up</Link>
+              </>
+            )}
+
             <button 
               className="hamburger"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -80,26 +94,38 @@ export default function Header() {
           <Link href="/brands" className="mobile-link" onClick={() => setIsMenuOpen(false)}>Brands</Link>
           <Link href="/about" className="mobile-link" onClick={() => setIsMenuOpen(false)}>About</Link>
           <Link href="/contact" className="mobile-link" onClick={() => setIsMenuOpen(false)}>Contact</Link>
-          <Link href="/admin" className="btn btn-primary" onClick={() => setIsMenuOpen(false)}>Admin Panel</Link>
+          <hr className="mobile-divider" />
+          {session ? (
+            <>
+              <Link href="/profile" className="mobile-link" onClick={() => setIsMenuOpen(false)}>Profile</Link>
+              <button onClick={() => { signOut({ callbackUrl: '/' }); setIsMenuOpen(false); }} className="mobile-link logout-btn">
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="mobile-link" onClick={() => setIsMenuOpen(false)}>Login</Link>
+              <Link href="/signup" className="mobile-link signup-link" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+            </>
+          )}
         </div>
       </div>
 
       <style jsx>{`
         .header {
+          background: white;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           position: sticky;
           top: 0;
-          z-index: 100;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid var(--border-color);
+          z-index: 50;
         }
 
         .nav {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 1rem 0;
           gap: 2rem;
+          padding: 1rem 0;
         }
 
         .logo {
@@ -108,7 +134,7 @@ export default function Header() {
           gap: 0.5rem;
           text-decoration: none;
           font-size: 1.5rem;
-          font-weight: 800;
+          font-weight: 700;
         }
 
         .logo-icon {
@@ -116,10 +142,6 @@ export default function Header() {
         }
 
         .logo-text {
-          color: var(--secondary-navy);
-        }
-
-        .logo-highlight {
           background: var(--primary-gradient);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -128,62 +150,50 @@ export default function Header() {
 
         .nav-links {
           display: flex;
-          align-items: center;
-          gap: 0.5rem;
+          gap: 2rem;
         }
 
         .nav-link {
-          padding: 0.5rem 1rem;
           text-decoration: none;
           color: var(--text-secondary);
           font-weight: 500;
-          border-radius: var(--radius-lg);
-          transition: all var(--transition-fast);
+          transition: color var(--transition-fast);
         }
 
         .nav-link:hover {
           color: var(--primary-purple);
-          background: rgba(139, 92, 246, 0.1);
         }
 
         .search-container {
-          flex: 1;
-          max-width: 400px;
-          position: relative;
+          display: flex;
+          align-items: center;
+          background: var(--bg-light);
+          border-radius: var(--radius-full);
+          padding: 0.5rem 1rem;
+          gap: 0.5rem;
         }
 
         .search-input {
-          width: 100%;
-          padding: 0.625rem 1rem;
-          padding-right: 2.5rem;
-          border: 2px solid var(--border-color);
-          border-radius: var(--radius-full);
-          font-size: 0.875rem;
-          transition: all var(--transition-fast);
-        }
-
-        .search-input:focus {
+          border: none;
+          background: transparent;
           outline: none;
-          border-color: var(--primary-purple);
-          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+          width: 200px;
+          font-size: 0.875rem;
         }
 
         .search-btn {
-          position: absolute;
-          right: 0.5rem;
-          top: 50%;
-          transform: translateY(-50%);
           background: none;
           border: none;
-          color: var(--text-muted);
           cursor: pointer;
-          padding: 0.25rem;
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
         }
 
         .nav-actions {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
         }
 
         .icon-btn {
@@ -192,22 +202,26 @@ export default function Header() {
           border-radius: 50%;
           border: none;
           background: var(--bg-light);
-          color: var(--text-secondary);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          color: var(--text-secondary);
           transition: all var(--transition-fast);
           text-decoration: none;
         }
 
         .icon-btn:hover {
-          background: rgba(139, 92, 246, 0.1);
-          color: var(--primary-purple);
+          background: var(--primary-purple);
+          color: white;
         }
 
         .mobile-search-btn {
           display: none;
+        }
+
+        .auth-loading {
+          color: var(--text-muted);
         }
 
         .hamburger {
@@ -217,11 +231,12 @@ export default function Header() {
           background: none;
           border: none;
           cursor: pointer;
-          padding: 0.5rem;
+          padding: 5px;
         }
 
         .hamburger span {
-          width: 24px;
+          display: block;
+          width: 25px;
           height: 2px;
           background: var(--text-primary);
           transition: all var(--transition-fast);
@@ -230,9 +245,7 @@ export default function Header() {
         .mobile-menu {
           display: none;
           flex-direction: column;
-          gap: 0.5rem;
           padding: 1rem 0;
-          border-top: 1px solid var(--border-color);
         }
 
         .mobile-menu.open {
@@ -240,17 +253,34 @@ export default function Header() {
         }
 
         .mobile-link {
-          padding: 0.75rem 1rem;
+          padding: 0.75rem 0;
           text-decoration: none;
-          color: var(--text-primary);
+          color: var(--text-secondary);
           font-weight: 500;
-          border-radius: var(--radius-lg);
-          transition: all var(--transition-fast);
+          border: none;
+          background: none;
+          text-align: left;
+          cursor: pointer;
+          font-size: 1rem;
         }
 
         .mobile-link:hover {
-          background: rgba(139, 92, 246, 0.1);
           color: var(--primary-purple);
+        }
+
+        .mobile-divider {
+          border: none;
+          border-top: 1px solid var(--border-color);
+          margin: 0.5rem 0;
+        }
+
+        .logout-btn {
+          color: #EF4444;
+        }
+
+        .signup-link {
+          color: var(--primary-purple);
+          font-weight: 600;
         }
 
         @media (max-width: 1024px) {
@@ -263,15 +293,19 @@ export default function Header() {
           }
 
           .search-container.open {
-            display: block;
+            display: flex;
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            padding: 1rem;
             background: white;
-            border-bottom: 1px solid var(--border-color);
-            max-width: none;
+            padding: 1rem;
+            border-radius: 0;
+            box-shadow: var(--shadow-md);
+          }
+
+          .search-container.open .search-input {
+            width: 100%;
           }
 
           .mobile-search-btn {
@@ -280,6 +314,13 @@ export default function Header() {
 
           .hamburger {
             display: flex;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .btn-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
           }
         }
       `}</style>
