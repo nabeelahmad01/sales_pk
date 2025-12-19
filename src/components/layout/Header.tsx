@@ -2,12 +2,24 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setIsSearchOpen(false);
+    }
+  };
 
   return (
     <header className="header">
@@ -24,24 +36,27 @@ export default function Header() {
             <Link href="/" className="nav-link">Home</Link>
             <Link href="/sales" className="nav-link">All Sales</Link>
             <Link href="/brands" className="nav-link">Brands</Link>
+            <Link href="/categories" className="nav-link">Categories</Link>
             <Link href="/about" className="nav-link">About</Link>
             <Link href="/contact" className="nav-link">Contact</Link>
           </div>
 
           {/* Search Bar */}
-          <div className={`search-container ${isSearchOpen ? 'open' : ''}`}>
+          <form onSubmit={handleSearch} className={`search-container ${isSearchOpen ? 'open' : ''}`}>
             <input 
               type="text" 
               placeholder="Search sales..." 
               className="search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <button className="search-btn">
+            <button type="submit" className="search-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </button>
-          </div>
+          </form>
 
           {/* Actions */}
           <div className="nav-actions">
