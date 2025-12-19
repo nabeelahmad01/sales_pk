@@ -431,6 +431,152 @@ export default function HomePage() {
         `}</style>
       </section>
 
+      {/* Ending Soon Section */}
+      <section className="ending-section">
+        <div className="container">
+          <div className="section-header">
+            <div>
+              <h2>⏰ Ending Soon!</h2>
+              <p>Grab these deals before they expire</p>
+            </div>
+            <Link href="/sales?sort=ending" className="btn btn-outline">
+              View All
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
+          <div className="ending-grid">
+            {sales.slice(0, 4).map(sale => {
+              const daysLeft = Math.ceil((new Date(sale.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return (
+                <Link href={`/sales/${sale.id}`} key={sale.id} className="ending-card">
+                  <div className="ending-timer">
+                    <span className="timer-value">{daysLeft}</span>
+                    <span className="timer-label">days left</span>
+                  </div>
+                  <div className="ending-info">
+                    <span className="ending-brand">{sale.brandName}</span>
+                    <h4 className="ending-title">{sale.title}</h4>
+                    <span className="ending-discount">{sale.discountPercentage}% OFF</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <style jsx>{`
+          .ending-section {
+            padding: 4rem 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(239, 68, 68, 0.03) 100%);
+          }
+
+          .section-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+          }
+
+          .section-header h2 {
+            margin-bottom: 0.5rem;
+          }
+
+          .section-header p {
+            color: var(--text-secondary);
+          }
+
+          .ending-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+          }
+
+          .ending-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all var(--transition-normal);
+            border-left: 4px solid #EF4444;
+          }
+
+          .ending-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+          }
+
+          .ending-timer {
+            background: linear-gradient(135deg, #EF4444, #F97316);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            min-width: 70px;
+          }
+
+          .timer-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+          }
+
+          .timer-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            opacity: 0.9;
+          }
+
+          .ending-brand {
+            font-size: 0.75rem;
+            color: var(--primary-purple);
+            font-weight: 600;
+            text-transform: uppercase;
+          }
+
+          .ending-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0.25rem 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .ending-discount {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #EF4444;
+          }
+
+          @media (max-width: 1024px) {
+            .ending-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+
+          @media (max-width: 640px) {
+            .ending-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .section-header {
+              text-align: center;
+              justify-content: center;
+            }
+          }
+        `}</style>
+      </section>
+
       {/* CTA Section */}
       <section className="cta-section">
         <div className="container">

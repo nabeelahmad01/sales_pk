@@ -15,6 +15,9 @@ export interface ISale extends Document {
   isActive: boolean;
   isFeatured: boolean;
   link: string;
+  views: number;
+  savesCount: number;
+  priceHistory: { price: number; date: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +38,9 @@ const SaleSchema = new Schema<ISale>(
     isActive: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },
     link: { type: String, required: true },
+    views: { type: Number, default: 0 },
+    savesCount: { type: Number, default: 0 },
+    priceHistory: [{ price: Number, date: Date }],
   },
   {
     timestamps: true,
