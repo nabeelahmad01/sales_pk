@@ -18,17 +18,17 @@ export default function HomePage() {
           <div className="hero-content">
             <span className="hero-badge">🔥 Live Sales Happening Now!</span>
             <h1 className="hero-title">
-              Never Miss a <span className="gradient-text">Sale</span> Again!
+              Misbah Nabeel a <span className="gradient-text">Sale</span> Again!
             </h1>
             <p className="hero-subtitle">
-              Discover the best discounts from all your favorite Pakistani clothing and shoes brands. 
+              Discover the best discounts from all your favorite Pakistani clothing and shoes brands.
               Khaadi, Gul Ahmed, Sapphire, Servis & more - all in one place!
             </p>
             <div className="hero-actions">
               <Link href="/sales" className="btn btn-primary btn-lg">
                 Browse All Sales
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </Link>
               <Link href="/brands" className="btn btn-outline btn-lg">
@@ -200,9 +200,9 @@ export default function HomePage() {
           </div>
           <div className="categories-grid">
             {categories.map((category, index) => (
-              <Link 
-                href={`/sales?category=${category.slug}`} 
-                key={category.id} 
+              <Link
+                href={`/sales?category=${category.slug}`}
+                key={category.id}
                 className="category-card"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -303,7 +303,7 @@ export default function HomePage() {
             <Link href="/sales" className="btn btn-outline">
               View All Sales
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
@@ -379,7 +379,7 @@ export default function HomePage() {
             <Link href="/brands" className="btn btn-outline">
               View All Brands
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
@@ -442,7 +442,7 @@ export default function HomePage() {
             <Link href="/sales?sort=ending" className="btn btn-outline">
               View All
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
@@ -585,10 +585,10 @@ export default function HomePage() {
               <h2>Get Sale Alerts Directly!</h2>
               <p>Be the first to know when your favorite brands announce new sales. Join 10,000+ smart shoppers!</p>
               <form className="cta-form">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  className="cta-input" 
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="cta-input"
                 />
                 <button type="submit" className="btn btn-primary btn-lg">
                   Subscribe Free
