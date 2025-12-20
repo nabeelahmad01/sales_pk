@@ -18,7 +18,7 @@ export default function HomePage() {
           <div className="hero-content">
             <span className="hero-badge">🔥 Live Sales Happening Now!</span>
             <h1 className="hero-title">
-              Missho N a <span className="gradient-text">Sale</span> Again!
+              Mishu N a <span className="gradient-text">Sale</span> Again!
             </h1>
             <p className="hero-subtitle">
               Discover the best discounts from all your favorite Pakistani clothing and shoes brands.
