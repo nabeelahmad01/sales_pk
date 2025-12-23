@@ -9,13 +9,19 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     const brandId = searchParams.get('brandId');
+    const brandName = searchParams.get('brandName');
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
     const query: any = {};
     
+    // Support both brandId and brandName filtering
     if (brandId) {
       query.brandId = brandId;
+    }
+    
+    if (brandName) {
+      query.brandName = { $regex: new RegExp(brandName, 'i') };
     }
     
     if (status && status !== 'all') {

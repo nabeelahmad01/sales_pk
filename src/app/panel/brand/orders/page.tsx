@@ -31,16 +31,22 @@ export default function BrandOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const brandId = (session?.user as any)?.brandId;
+  const brandName = session?.user?.name;
 
   useEffect(() => {
-    if (brandId) {
+    if (brandId || brandName) {
       fetchOrders();
     }
-  }, [brandId]);
+  }, [brandId, brandName]);
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`/api/orders?brandId=${brandId}`);
+      // Query by both brandId and brandName to handle mock data IDs
+      let url = "/api/orders?";
+      if (brandId) url += `brandId=${brandId}&`;
+      if (brandName) url += `brandName=${encodeURIComponent(brandName)}`;
+
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setOrders(data.data);
