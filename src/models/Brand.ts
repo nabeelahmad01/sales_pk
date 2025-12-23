@@ -8,6 +8,16 @@ export interface IBrand extends Document {
   website: string;
   category: string;
   isActive: boolean;
+  // Authentication
+  email?: string;
+  password?: string;
+  // Contact Info
+  contactPhone?: string;
+  contactPerson?: string;
+  // Approval Status
+  status: 'pending' | 'approved' | 'rejected';
+  approvedAt?: Date;
+  rejectedReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +31,16 @@ const BrandSchema = new Schema<IBrand>(
     website: { type: String },
     category: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    // Authentication
+    email: { type: String, unique: true, sparse: true },
+    password: { type: String },
+    // Contact Info
+    contactPhone: { type: String },
+    contactPerson: { type: String },
+    // Approval Status
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+    approvedAt: { type: Date },
+    rejectedReason: { type: String },
   },
   {
     timestamps: true,

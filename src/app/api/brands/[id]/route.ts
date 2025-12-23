@@ -46,6 +46,11 @@ export async function PUT(
       body.slug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
     
+    // Set approvedAt when status is approved
+    if (body.status === 'approved') {
+      body.approvedAt = new Date();
+    }
+    
     const brand = await Brand.findByIdAndUpdate(id, body, { new: true });
     
     if (!brand) {

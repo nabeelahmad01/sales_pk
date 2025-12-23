@@ -1,0 +1,11 @@
+name,logo,category,website,description,isActive
+Khaadi,https://example.com/khaadi-logo.png,Fashion,https://www.khaadi.com,Premium Pakistani fashion brand,true
+Gul Ahmed,https://example.com/gulahmed-logo.png,Fashion,https://www.gulahmed.com,Leading textile and clothing brand,true
+Sapphire,https://example.com/sapphire-logo.png,Fashion,https://www.sapphireonline.pk,Contemporary fashion brand,true
+Junaid Jamshed,https://example.com/jj-logo.png,Fashion,https://www.junaidjamshed.com,Islamic and traditional clothing,true
+Alkaram,https://example.com/alkaram-logo.png,Fashion,https://www.alkaramstudio.com,Pakistani fashion house,true
+Daraz,https://example.com/daraz-logo.png,Electronics,https://www.daraz.pk,Largest online marketplace,true
+PriceOye,https://example.com/priceoye-logo.png,Electronics,https://www.priceoye.pk,Mobile phones and gadgets,true
+Naheed,https://example.com/naheed-logo.png,Grocery,https://www.naheed.pk,Superstore chain,true
+Metro,https://example.com/metro-logo.png,Grocery,https://www.metro.pk,Hypermarket chain,true
+Imtiaz,https://example.com/imtiaz-logo.png,Grocery,https://www.imtiaz.com.pk,Supermarket chain,true

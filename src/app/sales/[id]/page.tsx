@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { use, useState } from 'react';
-import { notFound, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import SaleCard from '@/components/ui/SaleCard';
-import { useFavorites } from '@/hooks/useFavorites';
-import { sales, brands } from '@/data/mockData';
+import { use, useState } from "react";
+import { notFound, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import SaleCard from "@/components/ui/SaleCard";
+import { useFavorites } from "@/hooks/useFavorites";
+import { sales, brands } from "@/data/mockData";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -17,41 +17,48 @@ export default function SalePage({ params }: PageProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const { isFavorite, toggleFavorite, loading: favLoading } = useFavorites();
-  const [showToast, setShowToast] = useState('');
-  
-  const sale = sales.find(s => s.id === id);
-  
+  const [showToast, setShowToast] = useState("");
+
+  const sale = sales.find((s) => s.id === id);
+
   if (!sale) {
     notFound();
   }
 
-  const brand = brands.find(b => b.id === sale.brandId);
+  const brand = brands.find((b) => b.id === sale.brandId);
   const relatedSales = sales
-    .filter(s => s.id !== sale.id && (s.brandId === sale.brandId || s.category === sale.category))
+    .filter(
+      (s) =>
+        s.id !== sale.id &&
+        (s.brandId === sale.brandId || s.category === sale.category)
+    )
     .slice(0, 3);
 
   const daysLeft = Math.ceil(
-    (new Date(sale.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(sale.endDate).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24)
   );
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-PK', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-PK", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const handleFavorite = async () => {
     if (!session) {
-      router.push('/login?callbackUrl=' + encodeURIComponent(`/sales/${id}`));
+      router.push("/login?callbackUrl=" + encodeURIComponent(`/sales/${id}`));
       return;
     }
-    
+
     const result = await toggleFavorite(id);
     if (result.success) {
-      setShowToast(isFavorite(id) ? 'Removed from favorites' : 'Added to favorites!');
-      setTimeout(() => setShowToast(''), 3000);
+      setShowToast(
+        isFavorite(id) ? "Removed from favorites" : "Added to favorites!"
+      );
+      setTimeout(() => setShowToast(""), 3000);
     }
   };
 
@@ -63,12 +70,12 @@ export default function SalePage({ params }: PageProps) {
       {showToast && (
         <div className="toast">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
           </svg>
           {showToast}
         </div>
       )}
-      
+
       {/* Breadcrumb */}
       <div className="breadcrumb">
         <div className="container">
@@ -88,8 +95,12 @@ export default function SalePage({ params }: PageProps) {
             <div className="sale-image-section">
               <div className="sale-image">
                 <img src={sale.image} alt={sale.title} />
-                <span className="discount-badge">-{sale.discountPercentage}%</span>
-                {sale.isFeatured && <span className="featured-badge">🔥 HOT DEAL</span>}
+                <span className="discount-badge">
+                  -{sale.discountPercentage}%
+                </span>
+                {sale.isFeatured && (
+                  <span className="featured-badge">🔥 HOT DEAL</span>
+                )}
               </div>
             </div>
 
@@ -98,25 +109,36 @@ export default function SalePage({ params }: PageProps) {
               {/* Brand */}
               {brand && (
                 <Link href={`/brands/${brand.slug}`} className="brand-link">
-                  <img src={brand.logo} alt={brand.name} className="brand-logo" />
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="brand-logo"
+                  />
                   <span>{brand.name}</span>
                 </Link>
               )}
 
               <h1>{sale.title}</h1>
-              
+
               <p className="sale-description">{sale.description}</p>
 
               {/* Pricing */}
               <div className="pricing">
                 {sale.originalPrice && (
-                  <span className="original-price">Rs. {sale.originalPrice.toLocaleString()}</span>
+                  <span className="original-price">
+                    Rs. {sale.originalPrice.toLocaleString()}
+                  </span>
                 )}
                 {sale.salePrice && (
-                  <span className="sale-price">Rs. {sale.salePrice.toLocaleString()}</span>
+                  <span className="sale-price">
+                    Rs. {sale.salePrice.toLocaleString()}
+                  </span>
                 )}
                 <span className="savings">
-                  Save Rs. {((sale.originalPrice || 0) - (sale.salePrice || 0)).toLocaleString()}
+                  Save Rs.{" "}
+                  {(
+                    (sale.originalPrice || 0) - (sale.salePrice || 0)
+                  ).toLocaleString()}
                 </span>
               </div>
 
@@ -132,31 +154,72 @@ export default function SalePage({ params }: PageProps) {
                 </div>
                 <div className="meta-item">
                   <span className="meta-label">Time Left</span>
-                  <span className={`meta-value ${daysLeft <= 3 ? 'urgent' : ''}`}>
-                    {daysLeft > 0 ? `${daysLeft} days` : 'Ending today!'}
+                  <span
+                    className={`meta-value ${daysLeft <= 3 ? "urgent" : ""}`}
+                  >
+                    {daysLeft > 0 ? `${daysLeft} days` : "Ending today!"}
                   </span>
                 </div>
               </div>
 
               {/* CTA Buttons */}
               <div className="cta-buttons">
-                <a href={sale.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                    <polyline points="15 3 21 3 21 9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
+                <Link
+                  href={`/checkout/${sale.id}`}
+                  className="btn btn-primary btn-lg"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
                   </svg>
-                  Shop Now
+                  Buy Now
+                </Link>
+                <a
+                  href={sale.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-lg btn-outline"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Visit Store
                 </a>
-                <button 
-                  className={`btn btn-lg favorite-btn ${isSaved ? 'saved' : 'btn-outline'}`}
+                <button
+                  className={`btn btn-lg favorite-btn ${
+                    isSaved ? "saved" : "btn-outline"
+                  }`}
                   onClick={handleFavorite}
                   disabled={favLoading}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill={isSaved ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
-                  {isSaved ? 'Saved' : 'Save'}
+                  {isSaved ? "Saved" : "Save"}
                 </button>
               </div>
 
@@ -164,42 +227,63 @@ export default function SalePage({ params }: PageProps) {
               <div className="share-section">
                 <span>Share this deal:</span>
                 <div className="share-buttons">
-                  <button 
-                    className="share-btn whatsapp" 
+                  <button
+                    className="share-btn whatsapp"
                     title="Share on WhatsApp"
                     onClick={() => {
-                      const url = `https://wa.me/?text=${encodeURIComponent(`Check out this deal: ${sale.title} - ${sale.discountPercentage}% OFF!\n${window.location.href}`)}`;
-                      window.open(url, '_blank');
+                      const url = `https://wa.me/?text=${encodeURIComponent(
+                        `Check out this deal: ${sale.title} - ${sale.discountPercentage}% OFF!\n${window.location.href}`
+                      )}`;
+                      window.open(url, "_blank");
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
                   </button>
-                  <button 
-                    className="share-btn facebook" 
+                  <button
+                    className="share-btn facebook"
                     title="Share on Facebook"
                     onClick={() => {
-                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-                      window.open(url, '_blank', 'width=600,height=400');
+                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                        window.location.href
+                      )}`;
+                      window.open(url, "_blank", "width=600,height=400");
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
                   </button>
-                  <button 
-                    className="share-btn copy" 
+                  <button
+                    className="share-btn copy"
                     title="Copy Link"
                     onClick={() => {
                       navigator.clipboard.writeText(window.location.href);
-                      setShowToast('Link copied to clipboard!');
-                      setTimeout(() => setShowToast(''), 3000);
+                      setShowToast("Link copied to clipboard!");
+                      setTimeout(() => setShowToast(""), 3000);
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                     </svg>
                   </button>
                 </div>
@@ -215,10 +299,12 @@ export default function SalePage({ params }: PageProps) {
           <div className="container">
             <div className="section-header">
               <h2>You May Also Like</h2>
-              <Link href="/sales" className="view-all">View All Sales →</Link>
+              <Link href="/sales" className="view-all">
+                View All Sales →
+              </Link>
             </div>
             <div className="sales-grid">
-              {relatedSales.map(s => (
+              {relatedSales.map((s) => (
                 <SaleCard key={s.id} sale={s} />
               ))}
             </div>
@@ -230,9 +316,16 @@ export default function SalePage({ params }: PageProps) {
       <section className="back-section">
         <div className="container">
           <Link href="/sales" className="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
             </svg>
             Back to All Sales
           </Link>
@@ -298,7 +391,7 @@ export default function SalePage({ params }: PageProps) {
           position: absolute;
           top: 1.5rem;
           right: 1.5rem;
-          background: linear-gradient(135deg, #EF4444, #F97316);
+          background: linear-gradient(135deg, #ef4444, #f97316);
           color: white;
           padding: 0.75rem 1.25rem;
           border-radius: var(--radius-full);
@@ -311,7 +404,7 @@ export default function SalePage({ params }: PageProps) {
           position: absolute;
           top: 1.5rem;
           left: 1.5rem;
-          background: linear-gradient(135deg, #F97316, #FBBF24);
+          background: linear-gradient(135deg, #f97316, #fbbf24);
           color: white;
           padding: 0.5rem 1rem;
           border-radius: var(--radius-full);
@@ -421,7 +514,7 @@ export default function SalePage({ params }: PageProps) {
         }
 
         .meta-value.urgent {
-          color: #EF4444;
+          color: #ef4444;
         }
 
         .cta-buttons {
@@ -439,18 +532,18 @@ export default function SalePage({ params }: PageProps) {
 
         .favorite-btn:hover {
           background: rgba(239, 68, 68, 0.1);
-          border-color: #EF4444;
-          color: #EF4444;
+          border-color: #ef4444;
+          color: #ef4444;
         }
 
         .favorite-btn.saved {
-          background: #EF4444;
-          border-color: #EF4444;
+          background: #ef4444;
+          border-color: #ef4444;
           color: white;
         }
 
         .favorite-btn.saved:hover {
-          background: #DC2626;
+          background: #dc2626;
         }
 
         .toast {
@@ -458,7 +551,7 @@ export default function SalePage({ params }: PageProps) {
           bottom: 2rem;
           left: 50%;
           transform: translateX(-50%);
-          background: #1F2937;
+          background: #1f2937;
           color: white;
           padding: 0.75rem 1.5rem;
           border-radius: var(--radius-full);
@@ -472,7 +565,7 @@ export default function SalePage({ params }: PageProps) {
         }
 
         .toast svg {
-          color: #EF4444;
+          color: #ef4444;
         }
 
         @keyframes slideUp {
@@ -517,12 +610,12 @@ export default function SalePage({ params }: PageProps) {
         }
 
         .share-btn.whatsapp {
-          background: #25D366;
+          background: #25d366;
           color: white;
         }
 
         .share-btn.facebook {
-          background: #1877F2;
+          background: #1877f2;
           color: white;
         }
 

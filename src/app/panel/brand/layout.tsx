@@ -1,17 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 
-export default function AdminLayout({
+export default function BrandLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    // Redirect to login if not authenticated or not a brand
+    if (status === "unauthenticated") {
+      router.push("/panel/brand/login");
+    } else if (
+      status === "authenticated" &&
+      (session?.user as any)?.role !== "brand"
+    ) {
+      router.push("/panel/brand/login");
+    }
+  }, [status, session, router]);
+
+  // Don't render layout for login page
+  if (pathname === "/panel/brand/login") {
+    return <>{children}</>;
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="loading-screen">
+        <div className="loader"></div>
+        <p>Loading dashboard...</p>
+        <style jsx>{`
+          .loading-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+          }
+          .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (
+    status === "unauthenticated" ||
+    (session?.user as any)?.role !== "brand"
+  ) {
+    return null;
+  }
+
+  const brandName = session?.user?.name || "Brand";
+
   return (
-    <div className="admin-layout">
+    <div className="brand-layout">
       {/* Mobile Header */}
       <div className="mobile-header">
         <button className="hamburger" onClick={() => setSidebarOpen(true)}>
@@ -19,10 +82,8 @@ export default function AdminLayout({
           <span></span>
           <span></span>
         </button>
-        <Link href="/" className="mobile-logo">
-          🏷️ <span>ShowSales</span>
-        </Link>
-        <span className="mobile-badge">Admin</span>
+        <span className="mobile-brand">{brandName}</span>
+        <span className="mobile-badge">Brand</span>
       </div>
 
       {/* Overlay */}
@@ -33,11 +94,13 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <Link href="/" className="sidebar-logo">
-            <span className="logo-icon">🏷️</span>
-            <span className="logo-text">ShowSales</span>
-          </Link>
-          <span className="sidebar-badge">Admin</span>
+          <div className="brand-info">
+            <span className="brand-icon">🏪</span>
+            <div>
+              <span className="brand-name">{brandName}</span>
+              <span className="brand-label">Brand Dashboard</span>
+            </div>
+          </div>
           <button className="close-btn" onClick={() => setSidebarOpen(false)}>
             <svg
               width="24"
@@ -55,8 +118,10 @@ export default function AdminLayout({
 
         <nav className="sidebar-nav">
           <Link
-            href="/panel/admin-secret-786"
-            className="nav-item"
+            href="/panel/brand"
+            className={`nav-item ${
+              pathname === "/panel/brand" ? "active" : ""
+            }`}
             onClick={() => setSidebarOpen(false)}
           >
             <svg
@@ -75,8 +140,10 @@ export default function AdminLayout({
             Dashboard
           </Link>
           <Link
-            href="/panel/admin-secret-786/sales"
-            className="nav-item"
+            href="/panel/brand/sales"
+            className={`nav-item ${
+              pathname === "/panel/brand/sales" ? "active" : ""
+            }`}
             onClick={() => setSidebarOpen(false)}
           >
             <svg
@@ -90,11 +157,13 @@ export default function AdminLayout({
               <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
               <line x1="7" y1="7" x2="7.01" y2="7" />
             </svg>
-            Sales
+            My Sales
           </Link>
           <Link
-            href="/panel/admin-secret-786/brands"
-            className="nav-item"
+            href="/panel/brand/orders"
+            className={`nav-item ${
+              pathname === "/panel/brand/orders" ? "active" : ""
+            }`}
             onClick={() => setSidebarOpen(false)}
           >
             <svg
@@ -109,30 +178,13 @@ export default function AdminLayout({
               <line x1="3" y1="6" x2="21" y2="6" />
               <path d="M16 10a4 4 0 01-8 0" />
             </svg>
-            Brands
-          </Link>
-          <Link
-            href="/panel/admin-secret-786/orders"
-            className="nav-item"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" />
-              <path d="M3 6h18" />
-              <path d="M16 10a4 4 0 01-8 0" />
-            </svg>
             Orders
           </Link>
           <Link
-            href="/panel/admin-secret-786/subscribers"
-            className="nav-item"
+            href="/panel/brand/reviews"
+            className={`nav-item ${
+              pathname === "/panel/brand/reviews" ? "active" : ""
+            }`}
             onClick={() => setSidebarOpen(false)}
           >
             <svg
@@ -143,55 +195,34 @@ export default function AdminLayout({
               stroke="currentColor"
               strokeWidth="2"
             >
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 00-3-3.87" />
-              <path d="M16 3.13a4 4 0 010 7.75" />
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            Subscribers
-          </Link>
-          <Link
-            href="/panel/admin-secret-786/messages"
-            className="nav-item"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            Messages
-          </Link>
-          <Link
-            href="/panel/admin-secret-786/email-marketing"
-            className="nav-item"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-            </svg>
-            Email Marketing
+            Reviews
           </Link>
         </nav>
 
         <div className="sidebar-footer">
           <Link
             href="/"
-            className="nav-item exit-btn"
+            className="nav-item"
             onClick={() => setSidebarOpen(false)}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            View Site
+          </Link>
+          <button
+            className="nav-item logout-btn"
+            onClick={() => signOut({ callbackUrl: "/panel/brand/login" })}
           >
             <svg
               width="20"
@@ -205,16 +236,16 @@ export default function AdminLayout({
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            Exit Admin
-          </Link>
+            Logout
+          </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="admin-main">{children}</main>
+      <main className="brand-main">{children}</main>
 
       <style jsx>{`
-        .admin-layout {
+        .brand-layout {
           display: flex;
           min-height: 100vh;
         }
@@ -250,20 +281,10 @@ export default function AdminLayout({
           background: white;
         }
 
-        .mobile-logo {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          text-decoration: none;
+        .mobile-brand {
+          flex: 1;
           color: white;
-          font-weight: 700;
-          font-size: 1.125rem;
-        }
-
-        .mobile-logo span {
-          background: var(--primary-gradient);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          font-weight: 600;
         }
 
         .mobile-badge {
@@ -294,10 +315,6 @@ export default function AdminLayout({
           margin-left: auto;
         }
 
-        .close-btn:hover {
-          color: white;
-        }
-
         .sidebar {
           width: 260px;
           background: var(--secondary-navy);
@@ -322,27 +339,28 @@ export default function AdminLayout({
           margin-bottom: 1.5rem;
         }
 
-        .sidebar-logo {
+        .brand-info {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          text-decoration: none;
-          font-size: 1.25rem;
+          gap: 0.75rem;
+        }
+
+        .brand-icon {
+          font-size: 2rem;
+        }
+
+        .brand-name {
+          display: block;
           font-weight: 700;
-          color: white;
+          font-size: 1rem;
         }
 
-        .logo-icon {
-          font-size: 1.5rem;
-        }
-
-        .sidebar-badge {
-          background: var(--primary-gradient);
-          padding: 0.25rem 0.5rem;
-          border-radius: var(--radius-sm);
+        .brand-label {
+          display: block;
           font-size: 0.625rem;
-          font-weight: 700;
           text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.6);
+          letter-spacing: 0.5px;
         }
 
         .sidebar-nav {
@@ -362,24 +380,38 @@ export default function AdminLayout({
           border-radius: var(--radius-lg);
           transition: all var(--transition-fast);
           font-weight: 500;
+          border: none;
+          background: none;
+          cursor: pointer;
+          width: 100%;
+          text-align: left;
+          font-size: 0.875rem;
         }
 
-        .nav-item:hover {
+        .nav-item:hover,
+        .nav-item.active {
           background: rgba(255, 255, 255, 0.1);
           color: white;
+        }
+
+        .nav-item.active {
+          background: var(--primary-gradient);
         }
 
         .sidebar-footer {
           padding-top: 1rem;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
-        .exit-btn:hover {
+        .logout-btn:hover {
           background: rgba(239, 68, 68, 0.2);
           color: #fca5a5;
         }
 
-        .admin-main {
+        .brand-main {
           flex: 1;
           margin-left: 260px;
           background: var(--bg-light);
@@ -408,14 +440,14 @@ export default function AdminLayout({
             transform: translateX(0);
           }
 
-          .admin-main {
+          .brand-main {
             margin-left: 0;
             padding-top: 80px;
           }
         }
 
         @media (max-width: 640px) {
-          .admin-main {
+          .brand-main {
             padding: 1rem;
             padding-top: 76px;
           }

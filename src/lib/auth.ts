@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
         isAdmin: { label: 'Is Admin', type: 'text' },
+        isBrand: { label: 'Is Brand', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -44,9 +45,45 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid admin credentials');
         }
 
-        // Regular user login
         await dbConnect();
-        
+
+        // Check if brand login
+        if (credentials.isBrand === 'true') {
+          const Brand = (await import('@/models/Brand')).default;
+          const brand = await Brand.findOne({ email: credentials.email });
+          
+          if (!brand) {
+            throw new Error('No brand found with this email');
+          }
+
+          if (brand.status === 'pending') {
+            throw new Error('Your brand is pending approval. Please wait for admin approval.');
+          }
+
+          if (brand.status === 'rejected') {
+            throw new Error('Your brand registration was rejected.');
+          }
+
+          if (!brand.password) {
+            throw new Error('Password not set for this brand');
+          }
+
+          const isPasswordValid = await bcrypt.compare(credentials.password, brand.password);
+          
+          if (!isPasswordValid) {
+            throw new Error('Invalid password');
+          }
+
+          return {
+            id: brand._id.toString(),
+            email: brand.email,
+            name: brand.name,
+            role: 'brand',
+            brandId: brand._id.toString(),
+          };
+        }
+
+        // Regular user login
         const user = await User.findOne({ email: credentials.email });
         
         if (!user) {
@@ -96,6 +133,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role || 'user';
         token.id = user.id;
+        // Include brandId for brand users
+        if ((user as any).brandId) {
+          token.brandId = (user as any).brandId;
+        }
       }
       // For Google sign-in, fetch user from DB to get role
       if (account?.provider === 'google' && token.email) {
@@ -112,6 +153,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        // Include brandId for brand users
+        if (token.brandId) {
+          (session.user as any).brandId = token.brandId;
+        }
       }
       return session;
     },
