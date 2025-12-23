@@ -5,8 +5,8 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protect admin routes
-  if (pathname.startsWith('/panel/admin-secret-786')) {
+  // Protect admin routes (except login page)
+  if (pathname.startsWith('/panel/admin-secret-786') && !pathname.includes('/login')) {
     const token = await getToken({ 
       req: request, 
       secret: process.env.NEXTAUTH_SECRET 

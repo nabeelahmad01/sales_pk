@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { sales, brands } from '@/data/mockData';
+import Link from "next/link";
+import { sales, brands } from "@/data/mockData";
 
 export default function AdminDashboard() {
-  const activeSales = sales.filter(s => s.isActive).length;
-  const featuredSales = sales.filter(s => s.isFeatured).length;
+  const activeSales = sales.filter((s) => s.isActive).length;
+  const featuredSales = sales.filter((s) => s.isFeatured).length;
   const recentSales = sales.slice(0, 5);
 
   return (
@@ -18,9 +18,16 @@ export default function AdminDashboard() {
             <p>Welcome back! Here's what's happening with ShowSales.</p>
           </div>
           <Link href="/admin/sales/new" className="btn btn-primary">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add New Sale
           </Link>
@@ -30,9 +37,16 @@ export default function AdminDashboard() {
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon purple">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
-                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+                <line x1="7" y1="7" x2="7.01" y2="7" />
               </svg>
             </div>
             <div className="stat-content">
@@ -43,9 +57,16 @@ export default function AdminDashboard() {
 
           <div className="stat-card">
             <div className="stat-icon green">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                <polyline points="17 6 23 6 23 12"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
               </svg>
             </div>
             <div className="stat-content">
@@ -56,8 +77,15 @@ export default function AdminDashboard() {
 
           <div className="stat-card">
             <div className="stat-icon orange">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </div>
             <div className="stat-content">
@@ -68,10 +96,17 @@ export default function AdminDashboard() {
 
           <div className="stat-card">
             <div className="stat-icon pink">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
               </svg>
             </div>
             <div className="stat-content">
@@ -85,7 +120,9 @@ export default function AdminDashboard() {
         <div className="recent-section">
           <div className="section-header">
             <h2>Recent Sales</h2>
-            <Link href="/admin/sales" className="link">View All →</Link>
+            <Link href="/admin/sales" className="link">
+              View All →
+            </Link>
           </div>
           <div className="table-card">
             <table className="table">
@@ -99,19 +136,31 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentSales.map(sale => (
+                {recentSales.map((sale) => (
                   <tr key={sale.id}>
                     <td>
                       <div className="sale-info">
-                        <img src={sale.image} alt={sale.title} className="sale-thumb" />
+                        <img
+                          src={sale.image}
+                          alt={sale.title}
+                          className="sale-thumb"
+                        />
                         <span>{sale.title}</span>
                       </div>
                     </td>
                     <td>{sale.brandName}</td>
-                    <td><span className="discount-badge">{sale.discountPercentage}%</span></td>
                     <td>
-                      <span className={`status-badge ${sale.isActive ? 'active' : 'inactive'}`}>
-                        {sale.isActive ? 'Active' : 'Inactive'}
+                      <span className="discount-badge">
+                        {sale.discountPercentage}%
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`status-badge ${
+                          sale.isActive ? "active" : "inactive"
+                        }`}
+                      >
+                        {sale.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td>{new Date(sale.endDate).toLocaleDateString()}</td>
@@ -147,6 +196,12 @@ export default function AdminDashboard() {
       </div>
 
       <style jsx>{`
+        a.nav-item {
+          display: flex;
+          gap: 13px;
+          align-items: center;
+          margin-bottom: 10px;
+        }
         .dashboard-header {
           display: flex;
           align-items: flex-start;
@@ -190,10 +245,18 @@ export default function AdminDashboard() {
           color: white;
         }
 
-        .stat-icon.purple { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
-        .stat-icon.green { background: linear-gradient(135deg, #10B981, #34D399); }
-        .stat-icon.orange { background: linear-gradient(135deg, #F97316, #FBBF24); }
-        .stat-icon.pink { background: linear-gradient(135deg, #EC4899, #F472B6); }
+        .stat-icon.purple {
+          background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+        .stat-icon.green {
+          background: linear-gradient(135deg, #10b981, #34d399);
+        }
+        .stat-icon.orange {
+          background: linear-gradient(135deg, #f97316, #fbbf24);
+        }
+        .stat-icon.pink {
+          background: linear-gradient(135deg, #ec4899, #f472b6);
+        }
 
         .stat-content {
           display: flex;
@@ -283,7 +346,7 @@ export default function AdminDashboard() {
         }
 
         .discount-badge {
-          background: linear-gradient(135deg, #EF4444, #F97316);
+          background: linear-gradient(135deg, #ef4444, #f97316);
           color: white;
           padding: 0.25rem 0.75rem;
           border-radius: var(--radius-full);
@@ -305,7 +368,7 @@ export default function AdminDashboard() {
 
         .status-badge.inactive {
           background: rgba(239, 68, 68, 0.1);
-          color: #DC2626;
+          color: #dc2626;
         }
 
         .quick-actions h2 {

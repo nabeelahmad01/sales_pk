@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import SaleCard from '@/components/ui/SaleCard';
-import BrandCard from '@/components/ui/BrandCard';
-import { sales, brands, categories } from '@/data/mockData';
+import Link from "next/link";
+import SaleCard from "@/components/ui/SaleCard";
+import BrandCard from "@/components/ui/BrandCard";
+import { sales, brands, categories } from "@/data/mockData";
 
 export default function HomePage() {
-  const featuredSales = sales.filter(sale => sale.isFeatured);
+  const featuredSales = sales.filter((sale) => sale.isFeatured);
   const topBrands = brands.slice(0, 4);
 
   return (
@@ -18,16 +18,24 @@ export default function HomePage() {
           <div className="hero-content">
             <span className="hero-badge">🔥 Live Sales Happening Now!</span>
             <h1 className="hero-title">
-              Mishu N a <span className="gradient-text">Sale</span> Again!
+              Never Miss a <span className="gradient-text">Sale</span> Again!
             </h1>
             <p className="hero-subtitle">
-              Discover the best discounts from all your favorite Pakistani clothing and shoes brands.
-              Khaadi, Gul Ahmed, Sapphire, Servis & more - all in one place!
+              Discover the best discounts from all your favorite Pakistani
+              clothing and shoes brands. Khaadi, Gul Ahmed, Sapphire, Servis &
+              more - all in one place!
             </p>
             <div className="hero-actions">
               <Link href="/sales" className="btn btn-primary btn-lg">
                 Browse All Sales
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -62,35 +70,52 @@ export default function HomePage() {
           .hero-bg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+            background: linear-gradient(
+              135deg,
+              rgba(139, 92, 246, 0.08) 0%,
+              rgba(236, 72, 153, 0.08) 100%
+            );
             z-index: -1;
           }
 
           .hero-bg::before {
-            content: '';
+            content: "";
             position: absolute;
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            background: radial-gradient(
+              circle,
+              rgba(139, 92, 246, 0.15) 0%,
+              transparent 70%
+            );
             top: -200px;
             right: -100px;
             animation: float 20s ease-in-out infinite;
           }
 
           .hero-bg::after {
-            content: '';
+            content: "";
             position: absolute;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
+            background: radial-gradient(
+              circle,
+              rgba(236, 72, 153, 0.12) 0%,
+              transparent 70%
+            );
             bottom: -200px;
             left: -100px;
             animation: float 25s ease-in-out infinite reverse;
           }
 
           @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, 30px); }
+            0%,
+            100% {
+              transform: translate(0, 0);
+            }
+            50% {
+              transform: translate(30px, 30px);
+            }
           }
 
           .hero-content {
@@ -102,7 +127,11 @@ export default function HomePage() {
           .hero-badge {
             display: inline-block;
             padding: 0.5rem 1.25rem;
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(251, 191, 36, 0.15));
+            background: linear-gradient(
+              135deg,
+              rgba(249, 115, 22, 0.15),
+              rgba(251, 191, 36, 0.15)
+            );
             border: 1px solid rgba(249, 115, 22, 0.3);
             border-radius: var(--radius-full);
             font-size: 0.875rem;
@@ -113,8 +142,13 @@ export default function HomePage() {
           }
 
           @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.8;
+            }
           }
 
           .hero-title {
@@ -208,7 +242,9 @@ export default function HomePage() {
               >
                 <span className="category-icon">{category.icon}</span>
                 <h3 className="category-name">{category.name}</h3>
-                <span className="category-count">{category.salesCount} sales</span>
+                <span className="category-count">
+                  {category.salesCount} sales
+                </span>
               </Link>
             ))}
           </div>
@@ -274,8 +310,14 @@ export default function HomePage() {
           }
 
           @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
 
           @media (max-width: 1024px) {
@@ -302,13 +344,20 @@ export default function HomePage() {
             </div>
             <Link href="/sales" className="btn btn-outline">
               View All Sales
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
           <div className="sales-grid">
-            {featuredSales.map(sale => (
+            {featuredSales.map((sale) => (
               <SaleCard key={sale.id} sale={sale} />
             ))}
           </div>
@@ -317,7 +366,11 @@ export default function HomePage() {
         <style jsx>{`
           .featured-section {
             padding: 4rem 0;
-            background: linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, transparent 100%);
+            background: linear-gradient(
+              180deg,
+              rgba(139, 92, 246, 0.03) 0%,
+              transparent 100%
+            );
           }
 
           .section-header {
@@ -378,13 +431,20 @@ export default function HomePage() {
             </div>
             <Link href="/brands" className="btn btn-outline">
               View All Brands
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
           <div className="brands-grid">
-            {topBrands.map(brand => (
+            {topBrands.map((brand) => (
               <BrandCard key={brand.id} brand={brand} />
             ))}
           </div>
@@ -441,16 +501,30 @@ export default function HomePage() {
             </div>
             <Link href="/sales?sort=ending" className="btn btn-outline">
               View All
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
           <div className="ending-grid">
-            {sales.slice(0, 4).map(sale => {
-              const daysLeft = Math.ceil((new Date(sale.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            {sales.slice(0, 4).map((sale) => {
+              const daysLeft = Math.ceil(
+                (new Date(sale.endDate).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24)
+              );
               return (
-                <Link href={`/sales/${sale.id}`} key={sale.id} className="ending-card">
+                <Link
+                  href={`/sales/${sale.id}`}
+                  key={sale.id}
+                  className="ending-card"
+                >
                   <div className="ending-timer">
                     <span className="timer-value">{daysLeft}</span>
                     <span className="timer-label">days left</span>
@@ -458,7 +532,9 @@ export default function HomePage() {
                   <div className="ending-info">
                     <span className="ending-brand">{sale.brandName}</span>
                     <h4 className="ending-title">{sale.title}</h4>
-                    <span className="ending-discount">{sale.discountPercentage}% OFF</span>
+                    <span className="ending-discount">
+                      {sale.discountPercentage}% OFF
+                    </span>
                   </div>
                 </Link>
               );
@@ -469,7 +545,11 @@ export default function HomePage() {
         <style jsx>{`
           .ending-section {
             padding: 4rem 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(239, 68, 68, 0.03) 100%);
+            background: linear-gradient(
+              180deg,
+              transparent 0%,
+              rgba(239, 68, 68, 0.03) 100%
+            );
           }
 
           .section-header {
@@ -505,7 +585,7 @@ export default function HomePage() {
             align-items: center;
             gap: 1rem;
             transition: all var(--transition-normal);
-            border-left: 4px solid #EF4444;
+            border-left: 4px solid #ef4444;
           }
 
           .ending-card:hover {
@@ -514,7 +594,7 @@ export default function HomePage() {
           }
 
           .ending-timer {
-            background: linear-gradient(135deg, #EF4444, #F97316);
+            background: linear-gradient(135deg, #ef4444, #f97316);
             color: white;
             padding: 1rem;
             border-radius: var(--radius-lg);
@@ -555,7 +635,7 @@ export default function HomePage() {
           .ending-discount {
             font-size: 0.875rem;
             font-weight: 700;
-            color: #EF4444;
+            color: #ef4444;
           }
 
           @media (max-width: 1024px) {
@@ -583,7 +663,10 @@ export default function HomePage() {
           <div className="cta-card">
             <div className="cta-content">
               <h2>Get Sale Alerts Directly!</h2>
-              <p>Be the first to know when your favorite brands announce new sales. Join 10,000+ smart shoppers!</p>
+              <p>
+                Be the first to know when your favorite brands announce new
+                sales. Join 10,000+ smart shoppers!
+              </p>
               <form className="cta-form">
                 <input
                   type="email"
@@ -594,7 +677,9 @@ export default function HomePage() {
                   Subscribe Free
                 </button>
               </form>
-              <span className="cta-note">No spam, ever. Unsubscribe anytime.</span>
+              <span className="cta-note">
+                No spam, ever. Unsubscribe anytime.
+              </span>
             </div>
             <div className="cta-decoration">
               <span className="emoji-float emoji-1">🛍️</span>
@@ -694,14 +779,35 @@ export default function HomePage() {
             animation: floatEmoji 6s ease-in-out infinite;
           }
 
-          .emoji-1 { top: 10%; left: 10%; animation-delay: 0s; }
-          .emoji-2 { top: 20%; right: 15%; animation-delay: 1s; }
-          .emoji-3 { bottom: 15%; left: 15%; animation-delay: 2s; }
-          .emoji-4 { bottom: 10%; right: 10%; animation-delay: 3s; }
+          .emoji-1 {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+          }
+          .emoji-2 {
+            top: 20%;
+            right: 15%;
+            animation-delay: 1s;
+          }
+          .emoji-3 {
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 2s;
+          }
+          .emoji-4 {
+            bottom: 10%;
+            right: 10%;
+            animation-delay: 3s;
+          }
 
           @keyframes floatEmoji {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(10deg); }
+            0%,
+            100% {
+              transform: translateY(0) rotate(0deg);
+            }
+            50% {
+              transform: translateY(-20px) rotate(10deg);
+            }
           }
 
           @media (max-width: 768px) {

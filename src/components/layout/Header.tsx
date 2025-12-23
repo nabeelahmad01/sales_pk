@@ -39,6 +39,7 @@ export default function Header() {
             <Link href="/sales" className="nav-link">All Sales</Link>
             <Link href="/brands" className="nav-link">Brands</Link>
             <Link href="/categories" className="nav-link">Categories</Link>
+            <Link href="/calendar" className="nav-link">📅 Calendar</Link>
             <Link href="/about" className="nav-link">About</Link>
             <Link href="/contact" className="nav-link">Contact</Link>
           </div>
