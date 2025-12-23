@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import SaleCard from "@/components/ui/SaleCard";
 import BrandCard from "@/components/ui/BrandCard";
@@ -8,6 +9,43 @@ import { sales, brands, categories } from "@/data/mockData";
 export default function HomePage() {
   const featuredSales = sales.filter((sale) => sale.isFeatured);
   const topBrands = brands.slice(0, 4);
+
+  // Subscribe form state
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeStatus, setSubscribeStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [subscribeMessage, setSubscribeMessage] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subscribeEmail) return;
+
+    setSubscribeStatus("loading");
+    try {
+      const res = await fetch("/api/subscribers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: subscribeEmail }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setSubscribeStatus("success");
+        setSubscribeMessage("🎉 Subscribed! Check your inbox for sale alerts.");
+        setSubscribeEmail("");
+        setTimeout(() => setSubscribeStatus("idle"), 5000);
+      } else {
+        setSubscribeStatus("error");
+        setSubscribeMessage(data.error || "Failed to subscribe");
+        setTimeout(() => setSubscribeStatus("idle"), 3000);
+      }
+    } catch (error) {
+      setSubscribeStatus("error");
+      setSubscribeMessage("Something went wrong. Please try again.");
+      setTimeout(() => setSubscribeStatus("idle"), 3000);
+    }
+  };
 
   return (
     <>
@@ -667,14 +705,31 @@ export default function HomePage() {
                 Be the first to know when your favorite brands announce new
                 sales. Join 10,000+ smart shoppers!
               </p>
-              <form className="cta-form">
+
+              {subscribeStatus === "success" && (
+                <div className="subscribe-success">{subscribeMessage}</div>
+              )}
+              {subscribeStatus === "error" && (
+                <div className="subscribe-error">{subscribeMessage}</div>
+              )}
+
+              <form className="cta-form" onSubmit={handleSubscribe}>
                 <input
                   type="email"
                   placeholder="Enter your email"
                   className="cta-input"
+                  value={subscribeEmail}
+                  onChange={(e) => setSubscribeEmail(e.target.value)}
+                  required
                 />
-                <button type="submit" className="btn btn-primary btn-lg">
-                  Subscribe Free
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg"
+                  disabled={subscribeStatus === "loading"}
+                >
+                  {subscribeStatus === "loading"
+                    ? "Subscribing..."
+                    : "Subscribe Free"}
                 </button>
               </form>
               <span className="cta-note">
@@ -764,6 +819,29 @@ export default function HomePage() {
           .cta-note {
             font-size: 0.875rem;
             opacity: 0.8;
+          }
+
+          .subscribe-success,
+          .subscribe-error {
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1rem;
+            font-weight: 500;
+          }
+
+          .subscribe-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+          }
+
+          .subscribe-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+          }
+
+          .cta-form .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
           }
 
           .cta-decoration {

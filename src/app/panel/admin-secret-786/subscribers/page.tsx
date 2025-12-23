@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Subscriber {
   _id: string;
@@ -12,8 +12,16 @@ interface Subscriber {
 export default function AdminSubscribersPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  // Promotional email state
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoSubject, setPromoSubject] = useState("");
+  const [promoContent, setPromoContent] = useState("");
+  const [testEmail, setTestEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState<any>(null);
 
   useEffect(() => {
     fetchSubscribers();
@@ -21,70 +29,120 @@ export default function AdminSubscribersPage() {
 
   const fetchSubscribers = async () => {
     try {
-      const res = await fetch('/api/subscribers');
+      const res = await fetch("/api/subscribers");
       const data = await res.json();
       if (data.success) {
         setSubscribers(data.data);
       }
     } catch (error) {
-      console.error('Error fetching subscribers:', error);
+      console.error("Error fetching subscribers:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this subscriber?')) return;
-    
+    if (!confirm("Are you sure you want to delete this subscriber?")) return;
+
     try {
-      const res = await fetch(`/api/subscribers/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/subscribers/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         fetchSubscribers();
       } else {
-        alert(data.error || 'Failed to delete subscriber');
+        alert(data.error || "Failed to delete subscriber");
       }
     } catch (error) {
-      console.error('Error deleting subscriber:', error);
-      alert('Failed to delete subscriber');
+      console.error("Error deleting subscriber:", error);
+      alert("Failed to delete subscriber");
     }
   };
 
   const handleToggleStatus = async (subscriber: Subscriber) => {
     try {
       const res = await fetch(`/api/subscribers/${subscriber._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !subscriber.isActive }),
       });
       const data = await res.json();
       if (data.success) {
         fetchSubscribers();
       } else {
-        alert(data.error || 'Failed to update subscriber');
+        alert(data.error || "Failed to update subscriber");
       }
     } catch (error) {
-      console.error('Error updating subscriber:', error);
-      alert('Failed to update subscriber');
+      console.error("Error updating subscriber:", error);
+      alert("Failed to update subscriber");
+    }
+  };
+
+  // Send promotional email
+  const handleSendPromo = async (isTest: boolean = false) => {
+    if (!promoSubject || !promoContent) {
+      alert("Please enter subject and content");
+      return;
+    }
+
+    if (
+      !isTest &&
+      !confirm(
+        `Send promotional email to ${
+          subscribers.filter((s) => s.isActive).length
+        } active subscribers?`
+      )
+    ) {
+      return;
+    }
+
+    setSending(true);
+    setSendResult(null);
+
+    try {
+      const res = await fetch("/api/notifications/promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: promoSubject,
+          content: promoContent,
+          testEmail: isTest ? testEmail : undefined,
+        }),
+      });
+
+      const data = await res.json();
+      setSendResult(data);
+
+      if (data.success && !isTest) {
+        setPromoSubject("");
+        setPromoContent("");
+      }
+    } catch (error) {
+      console.error("Error sending promo:", error);
+      setSendResult({ success: false, error: "Failed to send emails" });
+    } finally {
+      setSending(false);
     }
   };
 
   // Filter subscribers
-  const filteredSubscribers = subscribers.filter(subscriber => {
-    const matchesSearch = subscriber.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || 
-                          (filterStatus === 'active' && subscriber.isActive) ||
-                          (filterStatus === 'inactive' && !subscriber.isActive);
+  const filteredSubscribers = subscribers.filter((subscriber) => {
+    const matchesSearch = subscriber.email
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && subscriber.isActive) ||
+      (filterStatus === "inactive" && !subscriber.isActive);
     return matchesSearch && matchesStatus;
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -105,35 +163,64 @@ export default function AdminSubscribersPage() {
             <h1>Subscribers</h1>
             <p>Manage your newsletter subscribers</p>
           </div>
-          <div className="header-stats">
-            <div className="stat">
-              <span className="stat-value">{subscribers.length}</span>
-              <span className="stat-label">Total</span>
-            </div>
-            <div className="stat">
-              <span className="stat-value">{subscribers.filter(s => s.isActive).length}</span>
-              <span className="stat-label">Active</span>
-            </div>
+          <div className="header-actions">
+            <button
+              onClick={() => setShowPromoModal(true)}
+              className="btn btn-primary"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+              Send Promotional Email
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="header-stats">
+          <div className="stat">
+            <span className="stat-value">{subscribers.length}</span>
+            <span className="stat-label">Total</span>
+          </div>
+          <div className="stat">
+            <span className="stat-value">
+              {subscribers.filter((s) => s.isActive).length}
+            </span>
+            <span className="stat-label">Active</span>
           </div>
         </div>
 
         {/* Filters */}
         <div className="filters-bar">
           <div className="search-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
               placeholder="Search by email..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <select 
-            value={filterStatus} 
-            onChange={e => setFilterStatus(e.target.value)}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Status</option>
@@ -144,7 +231,8 @@ export default function AdminSubscribersPage() {
 
         {/* Results Count */}
         <div className="results-count">
-          Showing <strong>{filteredSubscribers.length}</strong> of <strong>{subscribers.length}</strong> subscribers
+          Showing <strong>{filteredSubscribers.length}</strong> of{" "}
+          <strong>{subscribers.length}</strong> subscribers
         </div>
 
         {/* Subscribers Table */}
@@ -159,50 +247,84 @@ export default function AdminSubscribersPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredSubscribers.map(subscriber => (
+              {filteredSubscribers.map((subscriber) => (
                 <tr key={subscriber._id}>
                   <td>
                     <div className="email-cell">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
                       </svg>
                       <span>{subscriber.email}</span>
                     </div>
                   </td>
                   <td>
-                    <span className={`status-badge ${subscriber.isActive ? 'active' : 'inactive'}`}>
-                      {subscriber.isActive ? 'Active' : 'Inactive'}
+                    <span
+                      className={`status-badge ${
+                        subscriber.isActive ? "active" : "inactive"
+                      }`}
+                    >
+                      {subscriber.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td>{formatDate(subscriber.subscribedAt)}</td>
                   <td>
                     <div className="actions">
-                      <button 
-                        className={`action-btn ${subscriber.isActive ? 'deactivate' : 'activate'}`} 
-                        title={subscriber.isActive ? 'Deactivate' : 'Activate'}
+                      <button
+                        className={`action-btn ${
+                          subscriber.isActive ? "deactivate" : "activate"
+                        }`}
+                        title={subscriber.isActive ? "Deactivate" : "Activate"}
                         onClick={() => handleToggleStatus(subscriber)}
                       >
                         {subscriber.isActive ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
                           </svg>
                         ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
                           </svg>
                         )}
                       </button>
-                      <button 
-                        className="action-btn delete" 
+                      <button
+                        className="action-btn delete"
                         title="Delete"
                         onClick={() => handleDelete(subscriber._id)}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                         </svg>
                       </button>
                     </div>
@@ -218,18 +340,125 @@ export default function AdminSubscribersPage() {
             <span className="no-results-icon">📧</span>
             <h3>No subscribers found</h3>
             <p>
-              {subscribers.length === 0 
-                ? 'No one has subscribed to your newsletter yet.' 
-                : 'Try adjusting your search or filters.'
-              }
+              {subscribers.length === 0
+                ? "No one has subscribed to your newsletter yet."
+                : "Try adjusting your search or filters."}
             </p>
           </div>
         )}
       </div>
 
+      {/* Promotional Email Modal */}
+      {showPromoModal && (
+        <div className="modal-overlay" onClick={() => setShowPromoModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📧 Send Promotional Email</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowPromoModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="promo-info">
+                <p>
+                  This will send an email to{" "}
+                  <strong>
+                    {subscribers.filter((s) => s.isActive).length}
+                  </strong>{" "}
+                  active subscribers.
+                </p>
+              </div>
+
+              {sendResult && (
+                <div
+                  className={`result-message ${
+                    sendResult.success ? "success" : "error"
+                  }`}
+                >
+                  {sendResult.success ? (
+                    <>
+                      <strong>✓ Sent successfully!</strong>
+                      <span>
+                        Sent: {sendResult.results?.sent} | Failed:{" "}
+                        {sendResult.results?.failed}
+                      </span>
+                    </>
+                  ) : (
+                    <strong>✗ {sendResult.error}</strong>
+                  )}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Subject *</label>
+                <input
+                  type="text"
+                  value={promoSubject}
+                  onChange={(e) => setPromoSubject(e.target.value)}
+                  placeholder="e.g., 🔥 New Sales Alert - Up to 70% Off!"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email Content (HTML supported) *</label>
+                <textarea
+                  value={promoContent}
+                  onChange={(e) => setPromoContent(e.target.value)}
+                  placeholder="<h2>Big Sale Alert!</h2><p>Check out the latest deals...</p>"
+                  rows={8}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Test Email (optional)</label>
+                <input
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="your@email.com (for testing)"
+                />
+              </div>
+
+              <div className="modal-actions">
+                {testEmail && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => handleSendPromo(true)}
+                    disabled={sending}
+                  >
+                    {sending ? "Sending..." : "Send Test"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => handleSendPromo(false)}
+                  disabled={sending}
+                >
+                  {sending
+                    ? "Sending..."
+                    : `Send to All (${
+                        subscribers.filter((s) => s.isActive).length
+                      })`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .admin-page {
           max-width: 1200px;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 1rem;
         }
 
         .loading {
@@ -386,7 +615,7 @@ export default function AdminSubscribersPage() {
 
         .status-badge.inactive {
           background: rgba(239, 68, 68, 0.1);
-          color: #DC2626;
+          color: #dc2626;
         }
 
         .actions {
@@ -412,27 +641,27 @@ export default function AdminSubscribersPage() {
         }
 
         .action-btn.activate:hover {
-          background: #10B981;
+          background: #10b981;
           color: white;
         }
 
         .action-btn.deactivate {
           background: rgba(245, 158, 11, 0.1);
-          color: #D97706;
+          color: #d97706;
         }
 
         .action-btn.deactivate:hover {
-          background: #F59E0B;
+          background: #f59e0b;
           color: white;
         }
 
         .action-btn.delete {
           background: rgba(239, 68, 68, 0.1);
-          color: #DC2626;
+          color: #dc2626;
         }
 
         .action-btn.delete:hover {
-          background: #EF4444;
+          background: #ef4444;
           color: white;
         }
 
@@ -498,6 +727,135 @@ export default function AdminSubscribersPage() {
           .stat-value {
             font-size: 1.5rem;
           }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+
+        .modal {
+          background: white;
+          border-radius: var(--radius-xl);
+          width: 100%;
+          max-width: 600px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1.5rem;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+          font-size: 1.25rem;
+          margin: 0;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: var(--text-muted);
+        }
+
+        .modal-body {
+          padding: 1.5rem;
+        }
+
+        .promo-info {
+          background: rgba(139, 92, 246, 0.1);
+          padding: 1rem;
+          border-radius: var(--radius-lg);
+          margin-bottom: 1.5rem;
+        }
+
+        .promo-info p {
+          margin: 0;
+          color: var(--primary-purple);
+        }
+
+        .result-message {
+          padding: 1rem;
+          border-radius: var(--radius-lg);
+          margin-bottom: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .result-message.success {
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+        }
+
+        .result-message.error {
+          background: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
+        }
+
+        .form-group {
+          margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+          display: block;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: 2px solid var(--border-color);
+          border-radius: var(--radius-md);
+          font-size: 0.875rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: var(--primary-purple);
+        }
+
+        .form-group textarea {
+          font-family: monospace;
+          resize: vertical;
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          padding-top: 1rem;
+          border-top: 1px solid var(--border-color);
+        }
+
+        .btn-secondary {
+          background: var(--bg-light);
+          color: var(--text-primary);
+          border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+          background: var(--border-color);
         }
       `}</style>
     </>
