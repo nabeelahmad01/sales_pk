@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface User {
   _id: string;
@@ -18,8 +18,6 @@ interface Subscriber {
   subscribedAt: string;
 }
 
-type RecipientType = "all" | "users" | "subscribers";
-
 export default function EmailMarketingPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -28,15 +26,17 @@ export default function EmailMarketingPage() {
   // Email compose state
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
-  const [recipientType, setRecipientType] = useState<RecipientType>("all");
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState<any>(null);
 
+  // Imported emails from Excel/CSV
+  const [importedEmails, setImportedEmails] = useState<string[]>([]);
+  const [importError, setImportError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Preview tab
-  const [activeTab, setActiveTab] = useState<"compose" | "preview" | "history">(
-    "compose"
-  );
+  const [activeTab, setActiveTab] = useState<"compose" | "preview">("compose");
 
   useEffect(() => {
     fetchData();
@@ -61,22 +61,79 @@ export default function EmailMarketingPage() {
     }
   };
 
-  // Get all unique emails based on recipient type
-  const getRecipientEmails = (): string[] => {
-    const userEmails = users.map((u) => u.email);
-    const subscriberEmails = subscribers
-      .filter((s) => s.isActive)
-      .map((s) => s.email);
+  // Handle Excel/CSV file import
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (recipientType === "users") return userEmails;
-    if (recipientType === "subscribers") return subscriberEmails;
+    setImportError("");
+    const reader = new FileReader();
 
-    // All unique emails
-    return [...new Set([...userEmails, ...subscriberEmails])];
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split(/\r?\n/);
+        const emails: string[] = [];
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        lines.forEach((line) => {
+          // Handle CSV - split by comma, semicolon, or tab
+          const values = line.split(/[,;\t]/);
+          values.forEach((value) => {
+            const trimmed = value.trim().replace(/"/g, "");
+            if (emailRegex.test(trimmed)) {
+              emails.push(trimmed.toLowerCase());
+            }
+          });
+        });
+
+        // Remove duplicates
+        const uniqueEmails = [...new Set(emails)];
+
+        if (uniqueEmails.length === 0) {
+          setImportError("No valid emails found in file");
+        } else {
+          setImportedEmails((prev) => [...new Set([...prev, ...uniqueEmails])]);
+        }
+      } catch (error) {
+        setImportError(
+          "Error parsing file. Make sure it's a valid CSV/Excel file."
+        );
+      }
+    };
+
+    reader.onerror = () => {
+      setImportError("Error reading file");
+    };
+
+    reader.readAsText(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  const getRecipientCount = (): number => {
-    return getRecipientEmails().length;
+  // Clear imported emails
+  const clearImportedEmails = () => {
+    setImportedEmails([]);
+    setImportError("");
+  };
+
+  // Get ALL unique emails (users + subscribers + imported)
+  const getAllEmails = (): string[] => {
+    const userEmails = users.map((u) => u.email.toLowerCase());
+    const subscriberEmails = subscribers
+      .filter((s) => s.isActive)
+      .map((s) => s.email.toLowerCase());
+    const imported = importedEmails.map((e) => e.toLowerCase());
+
+    // Combine all and remove duplicates
+    return [...new Set([...userEmails, ...subscriberEmails, ...imported])];
+  };
+
+  const getTotalEmailCount = (): number => {
+    return getAllEmails().length;
   };
 
   const handleSendEmail = async (isTest: boolean = false) => {
@@ -85,10 +142,9 @@ export default function EmailMarketingPage() {
       return;
     }
 
-    if (
-      !isTest &&
-      !confirm(`Send email to ${getRecipientCount()} recipients?`)
-    ) {
+    const allEmails = getAllEmails();
+
+    if (!isTest && !confirm(`Send email to ${allEmails.length} recipients?`)) {
       return;
     }
 
@@ -103,7 +159,7 @@ export default function EmailMarketingPage() {
           subject,
           content,
           testEmail: isTest ? testEmail : undefined,
-          recipientType: isTest ? "all" : recipientType, // Pass selected recipient type
+          emailList: isTest ? undefined : allEmails, // Send all emails list
         }),
       });
 
@@ -261,83 +317,122 @@ export default function EmailMarketingPage() {
 
         {/* Main Content */}
         <div className="email-dashboard">
-          {/* Sidebar - Recipients List */}
+          {/* Sidebar - All Email Sources */}
           <div className="recipients-panel">
-            <h3>📋 Recipients</h3>
+            <h3>📋 Email List</h3>
+            <p className="panel-desc">
+              All emails will receive your promotional message
+            </p>
 
-            <div className="recipient-type-selector">
-              <button
-                className={`type-btn ${
-                  recipientType === "all" ? "active" : ""
-                }`}
-                onClick={() => setRecipientType("all")}
-              >
-                All (
-                {
-                  new Set([
-                    ...users.map((u) => u.email),
-                    ...subscribers
-                      .filter((s) => s.isActive)
-                      .map((s) => s.email),
-                  ]).size
-                }
-                )
-              </button>
-              <button
-                className={`type-btn ${
-                  recipientType === "users" ? "active" : ""
-                }`}
-                onClick={() => setRecipientType("users")}
-              >
-                Users ({users.length})
-              </button>
-              <button
-                className={`type-btn ${
-                  recipientType === "subscribers" ? "active" : ""
-                }`}
-                onClick={() => setRecipientType("subscribers")}
-              >
-                Subscribers ({subscribers.filter((s) => s.isActive).length})
-              </button>
+            {/* Email Sources Summary */}
+            <div className="email-sources">
+              <div className="source-item">
+                <span className="source-icon">👤</span>
+                <span className="source-label">Registered Users</span>
+                <span className="source-count">{users.length}</span>
+              </div>
+              <div className="source-item">
+                <span className="source-icon">📧</span>
+                <span className="source-label">Subscribers</span>
+                <span className="source-count">
+                  {subscribers.filter((s) => s.isActive).length}
+                </span>
+              </div>
+              <div className="source-item">
+                <span className="source-icon">📁</span>
+                <span className="source-label">Imported</span>
+                <span className="source-count">{importedEmails.length}</span>
+              </div>
+              <div className="source-item total">
+                <span className="source-icon">📊</span>
+                <span className="source-label">Total Unique</span>
+                <span className="source-count">{getTotalEmailCount()}</span>
+              </div>
             </div>
 
-            <div className="recipients-list">
-              <h4>
-                Recent{" "}
-                {recipientType === "all"
-                  ? "Users & Subscribers"
-                  : recipientType === "users"
-                  ? "Users"
-                  : "Subscribers"}
-              </h4>
+            {/* Excel/CSV Import */}
+            <div className="import-section">
+              <h4>📥 Import Emails</h4>
+              <p>Upload CSV or Excel file with email addresses</p>
 
-              {recipientType !== "subscribers" &&
-                users.slice(0, 5).map((user) => (
-                  <div key={user._id} className="recipient-item user">
-                    <span className="recipient-badge">👤</span>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".csv,.xlsx,.xls,.txt"
+                onChange={handleFileImport}
+                style={{ display: "none" }}
+              />
+
+              <button
+                className="import-btn"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                </svg>
+                Upload File
+              </button>
+
+              {importError && <div className="import-error">{importError}</div>}
+
+              {importedEmails.length > 0 && (
+                <div className="imported-info">
+                  <span>✓ {importedEmails.length} emails imported</span>
+                  <button onClick={clearImportedEmails} className="clear-btn">
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Emails Preview */}
+            <div className="recipients-list">
+              <h4>Recent Emails</h4>
+
+              {users.slice(0, 3).map((user) => (
+                <div key={user._id} className="recipient-item user">
+                  <span className="recipient-badge">👤</span>
+                  <div className="recipient-info">
+                    <span className="recipient-name">{user.name}</span>
+                    <span className="recipient-email">{user.email}</span>
+                  </div>
+                </div>
+              ))}
+
+              {subscribers
+                .filter((s) => s.isActive)
+                .slice(0, 2)
+                .map((sub) => (
+                  <div key={sub._id} className="recipient-item subscriber">
+                    <span className="recipient-badge">📧</span>
                     <div className="recipient-info">
-                      <span className="recipient-name">{user.name}</span>
-                      <span className="recipient-email">{user.email}</span>
+                      <span className="recipient-email">{sub.email}</span>
                     </div>
                   </div>
                 ))}
 
-              {recipientType !== "users" &&
-                subscribers
-                  .filter((s) => s.isActive)
-                  .slice(0, 5)
-                  .map((sub) => (
-                    <div key={sub._id} className="recipient-item subscriber">
-                      <span className="recipient-badge">📧</span>
-                      <div className="recipient-info">
-                        <span className="recipient-email">{sub.email}</span>
-                      </div>
-                    </div>
-                  ))}
+              {importedEmails.slice(0, 2).map((email, idx) => (
+                <div
+                  key={`imported-${idx}`}
+                  className="recipient-item imported"
+                >
+                  <span className="recipient-badge">📁</span>
+                  <div className="recipient-info">
+                    <span className="recipient-email">{email}</span>
+                  </div>
+                </div>
+              ))}
 
-              {getRecipientCount() > 10 && (
+              {getTotalEmailCount() > 7 && (
                 <div className="more-recipients">
-                  + {getRecipientCount() - 10} more recipients
+                  + {getTotalEmailCount() - 7} more recipients
                 </div>
               )}
             </div>
@@ -445,7 +540,7 @@ export default function EmailMarketingPage() {
                 <div className="send-section">
                   <div className="send-info">
                     <span className="send-count">
-                      📨 Will be sent to <strong>{getRecipientCount()}</strong>{" "}
+                      📨 Will be sent to <strong>{getTotalEmailCount()}</strong>{" "}
                       recipients
                     </span>
                   </div>
@@ -456,7 +551,7 @@ export default function EmailMarketingPage() {
                   >
                     {sending
                       ? "📤 Sending..."
-                      : `📧 Send to All ${getRecipientCount()} Recipients`}
+                      : `📧 Send to All ${getTotalEmailCount()} Recipients`}
                   </button>
                 </div>
               </div>
@@ -570,31 +665,122 @@ export default function EmailMarketingPage() {
         }
 
         .recipients-panel h3 {
-          margin: 0 0 1rem;
+          margin: 0 0 0.5rem;
           font-size: 1.125rem;
         }
 
-        .recipient-type-selector {
+        .panel-desc {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin: 0 0 1rem;
+        }
+
+        .email-sources {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
           margin-bottom: 1.5rem;
         }
 
-        .type-btn {
-          padding: 0.75rem 1rem;
-          border: 2px solid var(--border-color);
+        .source-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          background: var(--bg-light);
+          border-radius: var(--radius-md);
+        }
+
+        .source-item.total {
+          background: rgba(139, 92, 246, 0.1);
+          border: 2px solid var(--primary-purple);
+        }
+
+        .source-icon {
+          font-size: 1rem;
+        }
+
+        .source-label {
+          flex: 1;
+          font-size: 0.875rem;
+        }
+
+        .source-count {
+          font-weight: 700;
+          color: var(--primary-purple);
+        }
+
+        .import-section {
+          padding: 1rem;
+          background: var(--bg-light);
           border-radius: var(--radius-lg);
+          margin-bottom: 1.5rem;
+        }
+
+        .import-section h4 {
+          margin: 0 0 0.5rem;
+          font-size: 0.875rem;
+        }
+
+        .import-section p {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin: 0 0 1rem;
+        }
+
+        .import-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
           background: white;
-          text-align: left;
+          border: 2px dashed var(--border-color);
+          border-radius: var(--radius-md);
           cursor: pointer;
+          font-weight: 500;
+          color: var(--text-secondary);
           transition: all var(--transition-fast);
         }
 
-        .type-btn.active {
-          background: var(--primary-purple);
+        .import-btn:hover {
           border-color: var(--primary-purple);
-          color: white;
+          color: var(--primary-purple);
+        }
+
+        .import-error {
+          margin-top: 0.75rem;
+          padding: 0.5rem;
+          background: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
+          border-radius: var(--radius-sm);
+          font-size: 0.75rem;
+        }
+
+        .imported-info {
+          margin-top: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem;
+          background: rgba(16, 185, 129, 0.1);
+          border-radius: var(--radius-sm);
+          font-size: 0.75rem;
+          color: #059669;
+        }
+
+        .clear-btn {
+          background: none;
+          border: none;
+          color: #dc2626;
+          cursor: pointer;
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+        }
+
+        .clear-btn:hover {
+          text-decoration: underline;
         }
 
         .recipients-list h4 {

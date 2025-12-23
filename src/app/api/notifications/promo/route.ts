@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     
-    const { subject, content, testEmail, recipientType = 'all' } = await request.json();
+    const { subject, content, testEmail, emailList } = await request.json();
     
     if (!subject || !content) {
       return NextResponse.json(
@@ -20,27 +20,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If testEmail is provided, only send to that email (for testing)
+    // Determine target emails
     let targetEmails: string[] = [];
     
     if (testEmail) {
+      // Test mode - send to single email
       targetEmails = [testEmail];
+    } else if (emailList && Array.isArray(emailList) && emailList.length > 0) {
+      // Use provided email list (from frontend - includes users + subscribers + imported)
+      targetEmails = [...new Set(emailList.map((e: string) => e.toLowerCase()))];
     } else {
-      // Fetch based on recipientType
-      const userEmails: string[] = [];
-      const subscriberEmails: string[] = [];
-
-      if (recipientType === 'all' || recipientType === 'users') {
-        const users = await User.find({}, { email: 1 });
-        userEmails.push(...users.map(u => u.email));
-      }
-
-      if (recipientType === 'all' || recipientType === 'subscribers') {
-        const subscribers = await Subscriber.find({ isActive: true }, { email: 1 });
-        subscriberEmails.push(...subscribers.map(s => s.email));
-      }
-
-      // Combine and remove duplicates
+      // Fallback - fetch from DB
+      const users = await User.find({}, { email: 1 });
+      const subscribers = await Subscriber.find({ isActive: true }, { email: 1 });
+      
+      const userEmails = users.map(u => u.email.toLowerCase());
+      const subscriberEmails = subscribers.map(s => s.email.toLowerCase());
+      
       targetEmails = [...new Set([...userEmails, ...subscriberEmails])];
     }
 
