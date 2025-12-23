@@ -2,15 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
 // GET - Get single order
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await dbConnect();
+    const { id } = await context.params;
     
-    const order = await Order.findById(params.id);
+    const order = await Order.findById(id);
     
     if (!order) {
       return NextResponse.json(
@@ -35,10 +40,11 @@ export async function GET(
 // PUT - Update order
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await dbConnect();
+    const { id } = await context.params;
     
     const body = await request.json();
     const { status, paymentStatus, adminNotes, transactionId } = body;
@@ -67,7 +73,7 @@ export async function PUT(
     }
 
     const order = await Order.findByIdAndUpdate(
-      params.id,
+      id,
       updateData,
       { new: true }
     );
@@ -96,12 +102,13 @@ export async function PUT(
 // DELETE - Delete order
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await dbConnect();
+    const { id } = await context.params;
     
-    const order = await Order.findByIdAndDelete(params.id);
+    const order = await Order.findByIdAndDelete(id);
 
     if (!order) {
       return NextResponse.json(

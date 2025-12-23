@@ -84,6 +84,7 @@ export default function CheckoutPage({ params }: PageProps) {
     setError("");
 
     try {
+      // First create the order
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,12 +105,54 @@ export default function CheckoutPage({ params }: PageProps) {
       const data = await res.json();
 
       if (data.success) {
-        // Send confirmation email
+        const orderId = data.data.orderId;
+
+        // If JazzCash payment method, redirect to JazzCash
+        if (paymentMethod === "jazzcash") {
+          const jazzRes = await fetch("/api/payments/jazzcash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: totalAmount,
+              orderId: orderId,
+              customerEmail: formData.customerEmail,
+              customerPhone: formData.customerPhone,
+              productName: sale.title,
+            }),
+          });
+
+          const jazzData = await jazzRes.json();
+
+          if (jazzData.success) {
+            // Create and submit form to JazzCash
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = jazzData.data.paymentUrl;
+
+            Object.entries(jazzData.data.postData).forEach(([key, value]) => {
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = key;
+              input.value = value as string;
+              form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            return;
+          } else {
+            setError(jazzData.error || "Failed to initiate JazzCash payment");
+            setSubmitting(false);
+            return;
+          }
+        }
+
+        // For COD and other methods, send confirmation email
         await fetch("/api/notifications/order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            orderId: data.data.orderId,
+            orderId: orderId,
             customerEmail: formData.customerEmail,
             customerName: formData.customerName,
             productName: sale.title,
