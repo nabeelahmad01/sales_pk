@@ -45,29 +45,21 @@ export async function POST(request: NextRequest) {
     // Amount in paisa (multiply by 100)
     const amountInPaisa = Math.round(amount * 100).toString();
 
-    // Prepare POST fields for JazzCash - IMPORTANT: These must match hash generation order
+    // Prepare POST fields for JazzCash - Only include pp_ prefixed fields for hash
+    // Use simplified data matching JazzCash sandbox requirements
     const postData: Record<string, string> = {
       pp_Amount: amountInPaisa,
-      pp_BankID: '',
       pp_BillReference: orderId,
-      pp_Description: productName || 'Purchase from ShowSales.pk',
+      pp_Description: (productName || 'ShowSales Purchase').replace(/\s+/g, ''),
       pp_Language: 'EN',
       pp_MerchantID: merchantId,
       pp_Password: password,
-      pp_ProductID: '',
-      pp_ReturnURL: returnUrl,
-      pp_SubMerchantID: '',
+      pp_ReturnURL: 'com.fixkar.app', // Must match JazzCash sandbox registered URL
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
       pp_TxnExpiryDateTime: txnExpiryDateTime,
       pp_TxnRefNo: txnRefNo,
-      pp_TxnType: 'MWALLET',
       pp_Version: '1.1',
-      ppmpf_1: customerEmail || '',
-      ppmpf_2: customerPhone || '',
-      ppmpf_3: '',
-      ppmpf_4: '',
-      ppmpf_5: '',
     };
 
     // Generate secure hash
@@ -82,10 +74,11 @@ export async function POST(request: NextRequest) {
         txnRefNo: txnRefNo,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('JazzCash initiation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to initiate payment';
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to initiate payment' },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
@@ -103,26 +96,40 @@ function formatDateTime(date: Date): string {
 }
 
 // Generate HMAC-SHA256 secure hash for JazzCash
-// JazzCash requires: IntegritySalt + & + sorted non-empty field values joined by &
+// EXACT format from JazzCash Hash Calculator:
+// IntegritySalt&value1&value2&value3... (each value followed by &, last & removed)
+// HMAC-SHA256 with integritySalt as key, output UPPERCASE
 function generateSecureHash(data: Record<string, string>, integritySalt: string): string {
-  // Get all keys that start with pp_ and have non-empty values (exclude SecureHash)
+  // Get sorted keys (alphabetically) - only pp_ prefixed fields
   const sortedKeys = Object.keys(data)
-    .filter(key => key.startsWith('pp') && data[key] !== '' && key !== 'pp_SecureHash')
+    .filter(key => key.startsWith('pp_') && key !== 'pp_SecureHash')
     .sort();
+
+  // Build string: IntegritySalt&value1&value2&...
+  let finalString = integritySalt + '&';
   
-  // Build the string: IntegritySalt&value1&value2&... (values in alphabetical key order)
-  const hashString = integritySalt + '&' + sortedKeys
-    .map(key => data[key])
-    .join('&');
+  for (const key of sortedKeys) {
+    const value = data[key];
+    if (value !== undefined && value !== null && value !== '') {
+      finalString += value + '&';
+    }
+  }
   
-  console.log('Hash String:', hashString); // Debug log
-  
-  // Generate HMAC-SHA256 hash
+  // Remove the last '&'
+  if (finalString.endsWith('&')) {
+    finalString = finalString.slice(0, -1);
+  }
+
+  console.log('Hash Input String:', finalString);
+
+  // Generate HMAC-SHA256 using integrity salt as key, output UPPERCASE
   const hash = crypto
     .createHmac('sha256', integritySalt)
-    .update(hashString)
+    .update(finalString)
     .digest('hex')
     .toUpperCase();
-  
+
+  console.log('Generated Hash:', hash);
+
   return hash;
 }
