@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // JazzCash credentials - using FixKar sandbox credentials
-    const merchantId = process.env.JAZZCASH_MERCHANT_ID || 'MC489932';
-    const password = process.env.JAZZCASH_PASSWORD || '6355w4835w';
-    const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT || 'us1gh5vw8x';
+    // JazzCash credentials from environment variables
+    const merchantId = process.env.JAZZCASH_MERCHANT_ID;
+    const password = process.env.JAZZCASH_PASSWORD;
+    const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT;
     
-    // JazzCash Sandbox Payment URL (correct POST endpoint)
-    const paymentUrl = 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
+    // JazzCash Sandbox Payment URL
+    const paymentUrl = process.env.JAZZCASH_SANDBOX_URL || 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
 
     if (!merchantId || !password || !integritySalt) {
       return NextResponse.json(
