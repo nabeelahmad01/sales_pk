@@ -34,12 +34,16 @@ export async function POST(request: NextRequest) {
     const returnUrl = 'https://sales-pk.vercel.app/api/payments/jazzcash/callback';
 
     // Generate transaction reference and date/time
+    // IMPORTANT: JazzCash uses Pakistan time (PKT = UTC+5)
     const txnRefNo = `T${Date.now()}`;
-    const now = new Date();
+    
+    // Get Pakistan time (UTC+5)
+    const pakistanOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+    const now = new Date(Date.now() + pakistanOffset);
     const txnDateTime = formatDateTime(now);
     
-    // Expiry time (1 hour from now)
-    const expiry = new Date(now.getTime() + 60 * 60 * 1000);
+    // Expiry time (24 hours from now in Pakistan time)
+    const expiry = new Date(Date.now() + pakistanOffset + 24 * 60 * 60 * 1000);
     const txnExpiryDateTime = formatDateTime(expiry);
 
     // Amount in paisa (multiply by 100)
