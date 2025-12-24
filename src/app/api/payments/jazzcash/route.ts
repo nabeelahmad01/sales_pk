@@ -122,12 +122,12 @@ function generateSecureHash(data: Record<string, string>, integritySalt: string)
 
   console.log('Hash Input String:', finalString);
 
-  // Generate HMAC-SHA256 using integrity salt as key, output UPPERCASE
+  // Generate HMAC-SHA256 using integrity salt as key
+  // JazzCash official sample uses lowercase hex output
   const hash = crypto
     .createHmac('sha256', integritySalt)
     .update(finalString)
-    .digest('hex')
-    .toUpperCase();
+    .digest('hex');  // lowercase, not toUpperCase()
 
   console.log('Generated Hash:', hash);
 
