@@ -1,0 +1,126 @@
+.policy-page {
+  padding: 3rem 0;
+  background: var(--bg-light);
+  min-height: 100vh;
+}
+
+.policy-content {
+  background: white;
+  padding: 3rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.policy-content section {
+  margin-bottom: 2.5rem;
+}
+
+.policy-content section:last-of-type {
+  margin-bottom: 0;
+}
+
+.policy-content h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-purple);
+}
+
+.policy-content h3 {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin: 1.5rem 0 0.75rem;
+}
+
+.policy-content p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.policy-content ul,
+.policy-content ol {
+  margin: 1rem 0 1rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.policy-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.policy-content .contact-box,
+.policy-content .info-box {
+  background: var(--bg-light);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin-top: 1rem;
+}
+
+.policy-content .contact-box p,
+.policy-content .info-box p {
+  margin-bottom: 0.5rem;
+}
+
+.policy-content .refund-table,
+.policy-content .shipping-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.policy-content .refund-table th,
+.policy-content .refund-table td,
+.policy-content .shipping-table th,
+.policy-content .shipping-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--border-color);
+}
+
+.policy-content .refund-table th,
+.policy-content .shipping-table th {
+  background: var(--bg-light);
+  font-weight: 600;
+}
+
+.policy-content .refund-table tr:nth-child(even),
+.policy-content .shipping-table tr:nth-child(even) {
+  background: var(--bg-light);
+}
+
+.policy-content .note {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.policy-content a {
+  color: var(--primary-purple);
+}
+
+.policy-footer {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .policy-content {
+    padding: 1.5rem;
+  }
+
+  .policy-content .refund-table,
+  .policy-content .shipping-table {
+    font-size: 0.875rem;
+  }
+
+  .policy-content .refund-table th,
+  .policy-content .refund-table td,
+  .policy-content .shipping-table th,
+  .policy-content .shipping-table td {
+    padding: 0.5rem;
+  }
+}
