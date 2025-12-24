@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       pp_Language: 'EN',
       pp_MerchantID: merchantId,
       pp_Password: password,
-      pp_ReturnURL: 'com.fixkar.app', // Must match JazzCash sandbox registered URL
+      pp_ReturnURL: 'https://sales-pk.vercel.app/api/payments/jazzcash/callback',
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
       pp_TxnExpiryDateTime: txnExpiryDateTime,
