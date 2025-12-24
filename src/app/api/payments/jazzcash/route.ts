@@ -15,11 +15,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // JazzCash credentials from environment
-    const merchantId = process.env.JAZZCASH_MERCHANT_ID;
-    const password = process.env.JAZZCASH_PASSWORD;
-    const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT;
-    const sandboxUrl = process.env.JAZZCASH_SANDBOX_URL;
+    // JazzCash credentials - using FixKar sandbox credentials
+    const merchantId = process.env.JAZZCASH_MERCHANT_ID || 'MC489932';
+    const password = process.env.JAZZCASH_PASSWORD || '6355w4835w';
+    const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT || 'us1gh5vw8x';
+    
+    // JazzCash Sandbox Payment URL (correct POST endpoint)
+    const paymentUrl = 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
 
     if (!merchantId || !password || !integritySalt) {
       return NextResponse.json(
@@ -28,10 +30,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the base URL - for localhost testing, JazzCash sandbox may not work
-    // In production, use your actual domain
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const returnUrl = `${baseUrl}/api/payments/jazzcash/callback`;
+    // Return URL - must match what's registered in JazzCash sandbox dashboard
+    const returnUrl = 'https://sales-pk.vercel.app/api/payments/jazzcash/callback';
 
     // Generate transaction reference and date/time
     const txnRefNo = `T${Date.now()}`;
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       pp_Language: 'EN',
       pp_MerchantID: merchantId,
       pp_Password: password,
-      pp_ReturnURL: 'https://sales-pk.vercel.app/api/payments/jazzcash/callback',
+      pp_ReturnURL: returnUrl,
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
       pp_TxnExpiryDateTime: txnExpiryDateTime,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        paymentUrl: sandboxUrl,
+        paymentUrl: paymentUrl,
         postData: postData,
         txnRefNo: txnRefNo,
       },
