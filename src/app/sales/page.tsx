@@ -1,71 +1,205 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import SaleCard from '@/components/ui/SaleCard';
-import { sales, brands, categories } from '@/data/mockData';
+import { useState, useMemo, useEffect } from "react";
+import SaleCard from "@/components/ui/SaleCard";
+import { Sale, Brand, Category } from "@/types";
 
 export default function SalesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [minDiscount, setMinDiscount] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<string>('newest');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Fetch data from API
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [salesRes, brandsRes, categoriesRes] = await Promise.all([
+          fetch("/api/sales?active=true"),
+          fetch("/api/brands"),
+          fetch("/api/categories"),
+        ]);
+
+        const [salesData, brandsData, categoriesData] = await Promise.all([
+          salesRes.json(),
+          brandsRes.json(),
+          categoriesRes.json(),
+        ]);
+
+        if (salesData.success) setSales(salesData.data);
+        if (brandsData.success) setBrands(brandsData.data);
+        if (categoriesData.success) setCategories(categoriesData.data);
+      } catch (err) {
+        console.error("Failed to load data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filteredSales = useMemo(() => {
     let result = [...sales];
 
     // Filter by category
-    if (selectedCategory !== 'all') {
-      result = result.filter(sale => sale.category.toLowerCase() === selectedCategory);
+    if (selectedCategory !== "all") {
+      result = result.filter(
+        (sale) => sale.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
     }
 
     // Filter by brand
-    if (selectedBrand !== 'all') {
-      result = result.filter(sale => sale.brandId === selectedBrand);
+    if (selectedBrand !== "all") {
+      result = result.filter((sale) => sale.brandId === selectedBrand);
     }
 
     // Filter by minimum discount
     if (minDiscount > 0) {
-      result = result.filter(sale => sale.discountPercentage >= minDiscount);
+      result = result.filter((sale) => sale.discountPercentage >= minDiscount);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
-        sale =>
+        (sale) =>
           sale.title.toLowerCase().includes(query) ||
           sale.brandName.toLowerCase().includes(query) ||
           sale.description.toLowerCase().includes(query)
       );
     }
 
+    // Filter out expired sales
+    const now = new Date();
+    result = result.filter((sale) => new Date(sale.endDate) >= now);
+
     // Sort
     switch (sortBy) {
-      case 'discount':
+      case "discount":
         result.sort((a, b) => b.discountPercentage - a.discountPercentage);
         break;
-      case 'ending':
-        result.sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
+      case "ending":
+        result.sort(
+          (a, b) =>
+            new Date(a.endDate).getTime() - new Date(b.endDate).getTime()
+        );
         break;
-      case 'newest':
+      case "newest":
       default:
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        result.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
     }
 
     return result;
-  }, [selectedCategory, selectedBrand, minDiscount, sortBy, searchQuery]);
+  }, [
+    sales,
+    selectedCategory,
+    selectedBrand,
+    minDiscount,
+    sortBy,
+    searchQuery,
+  ]);
 
   const clearFilters = () => {
-    setSelectedCategory('all');
-    setSelectedBrand('all');
+    setSelectedCategory("all");
+    setSelectedBrand("all");
     setMinDiscount(0);
-    setSortBy('newest');
-    setSearchQuery('');
+    setSortBy("newest");
+    setSearchQuery("");
   };
 
-  const hasActiveFilters = selectedCategory !== 'all' || selectedBrand !== 'all' || minDiscount > 0 || searchQuery;
+  const hasActiveFilters =
+    selectedCategory !== "all" ||
+    selectedBrand !== "all" ||
+    minDiscount > 0 ||
+    searchQuery;
+
+  if (loading) {
+    return (
+      <>
+        <section className="page-header">
+          <div className="container">
+            <h1>All Sales</h1>
+            <p>Discover amazing discounts from Pakistan's top brands</p>
+          </div>
+        </section>
+        <div className="sales-page">
+          <div className="container">
+            <div className="loading-grid">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton-card"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <style jsx>{`
+          .page-header {
+            background: linear-gradient(
+              135deg,
+              rgba(139, 92, 246, 0.08) 0%,
+              rgba(236, 72, 153, 0.08) 100%
+            );
+            padding: 3rem 0;
+            text-align: center;
+          }
+          .page-header h1 {
+            margin-bottom: 0.5rem;
+          }
+          .page-header p {
+            color: var(--text-secondary);
+          }
+          .sales-page {
+            padding: 2rem 0 4rem;
+          }
+          .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+          }
+          .skeleton-card {
+            height: 300px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 16px;
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+          @media (max-width: 900px) {
+            .loading-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          @media (max-width: 640px) {
+            .loading-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -81,19 +215,29 @@ export default function SalesPage() {
         <div className="container">
           <div className="sales-layout">
             {/* Sidebar Filters */}
-            <button className="mobile-filter-btn" onClick={() => setFiltersOpen(!filtersOpen)}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="4" y1="21" x2="4" y2="14"/>
-                <line x1="4" y1="10" x2="4" y2="3"/>
-                <line x1="12" y1="21" x2="12" y2="12"/>
-                <line x1="12" y1="8" x2="12" y2="3"/>
-                <line x1="20" y1="21" x2="20" y2="16"/>
-                <line x1="20" y1="12" x2="20" y2="3"/>
+            <button
+              className="mobile-filter-btn"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
               </svg>
-              {filtersOpen ? 'Hide Filters' : 'Show Filters'}
+              {filtersOpen ? "Hide Filters" : "Show Filters"}
               {hasActiveFilters && <span className="filter-count">●</span>}
             </button>
-            <aside className={`filters-sidebar ${filtersOpen ? 'open' : ''}`}>
+            <aside className={`filters-sidebar ${filtersOpen ? "open" : ""}`}>
               <div className="filter-header">
                 <h3>Filters</h3>
                 {hasActiveFilters && (
@@ -110,7 +254,7 @@ export default function SalesPage() {
                   type="text"
                   placeholder="Search sales..."
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="filter-input"
                 />
               </div>
@@ -120,15 +264,19 @@ export default function SalesPage() {
                 <label className="filter-label">Category</label>
                 <div className="filter-options">
                   <button
-                    className={`filter-option ${selectedCategory === 'all' ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory('all')}
+                    className={`filter-option ${
+                      selectedCategory === "all" ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedCategory("all")}
                   >
                     All Categories
                   </button>
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <button
-                      key={cat.id}
-                      className={`filter-option ${selectedCategory === cat.slug ? 'active' : ''}`}
+                      key={cat._id || cat.id}
+                      className={`filter-option ${
+                        selectedCategory === cat.slug ? "active" : ""
+                      }`}
                       onClick={() => setSelectedCategory(cat.slug)}
                     >
                       {cat.icon} {cat.name}
@@ -142,12 +290,15 @@ export default function SalesPage() {
                 <label className="filter-label">Brand</label>
                 <select
                   value={selectedBrand}
-                  onChange={e => setSelectedBrand(e.target.value)}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
                   className="filter-select"
                 >
                   <option value="all">All Brands</option>
-                  {brands.map(brand => (
-                    <option key={brand.id} value={brand.id}>
+                  {brands.map((brand) => (
+                    <option
+                      key={brand._id || brand.id}
+                      value={brand._id || brand.id}
+                    >
                       {brand.name}
                     </option>
                   ))}
@@ -158,13 +309,15 @@ export default function SalesPage() {
               <div className="filter-group">
                 <label className="filter-label">Minimum Discount</label>
                 <div className="discount-buttons">
-                  {[0, 20, 30, 50, 70].map(discount => (
+                  {[0, 20, 30, 50, 70].map((discount) => (
                     <button
                       key={discount}
-                      className={`discount-btn ${minDiscount === discount ? 'active' : ''}`}
+                      className={`discount-btn ${
+                        minDiscount === discount ? "active" : ""
+                      }`}
                       onClick={() => setMinDiscount(discount)}
                     >
-                      {discount === 0 ? 'Any' : `${discount}%+`}
+                      {discount === 0 ? "Any" : `${discount}%+`}
                     </button>
                   ))}
                 </div>
@@ -182,7 +335,7 @@ export default function SalesPage() {
                   <label>Sort by:</label>
                   <select
                     value={sortBy}
-                    onChange={e => setSortBy(e.target.value)}
+                    onChange={(e) => setSortBy(e.target.value)}
                     className="sort-select"
                   >
                     <option value="newest">Newest First</option>
@@ -195,8 +348,8 @@ export default function SalesPage() {
               {/* Sales Grid */}
               {filteredSales.length > 0 ? (
                 <div className="sales-grid">
-                  {filteredSales.map(sale => (
-                    <SaleCard key={sale.id} sale={sale} />
+                  {filteredSales.map((sale) => (
+                    <SaleCard key={sale._id || sale.id} sale={sale} />
                   ))}
                 </div>
               ) : (
@@ -216,7 +369,11 @@ export default function SalesPage() {
 
       <style jsx>{`
         .page-header {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+          background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.08) 0%,
+            rgba(236, 72, 153, 0.08) 100%
+          );
           padding: 3rem 0;
           text-align: center;
         }
@@ -461,7 +618,7 @@ export default function SalesPage() {
         }
 
         .filter-count {
-          color: #FBBF24;
+          color: #fbbf24;
           margin-left: 0.25rem;
         }
 

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Subscriber from '@/models/Subscriber';
 import User from '@/models/User';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from '@/lib/email';
 
 // POST - Send promotional email to all users and active subscribers
 export async function POST(request: NextRequest) {
@@ -64,8 +62,7 @@ export async function POST(request: NextRequest) {
       
       const emailPromises = batch.map(async (email) => {
         try {
-          const result = await resend.emails.send({
-            from: 'ShowSales.pk <onboarding@resend.dev>', // Using Resend's default for testing
+          const result = await sendEmail({
             to: email,
             subject: subject,
             html: `

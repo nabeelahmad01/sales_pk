@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from '@/lib/email';
 
 // POST - Send order confirmation email
 export async function POST(request: NextRequest) {
@@ -92,8 +90,7 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    await resend.emails.send({
-      from: 'ShowSales.pk <onboarding@resend.dev>',
+    await sendEmail({
       to: customerEmail,
       subject: `Order Confirmed - ${orderId} | ShowSales.pk`,
       html: emailHtml,

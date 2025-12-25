@@ -1,7 +1,8 @@
 // Type definitions for ShowSales
 
 export interface Sale {
-  id: string;
+  _id?: string;
+  id?: string;
   title: string;
   description: string;
   brandId: string;
@@ -17,12 +18,15 @@ export interface Sale {
   isActive: boolean;
   isFeatured: boolean;
   link: string;
+  views?: number;
+  affiliateClicks?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Brand {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   slug: string;
   logo: string;
@@ -30,12 +34,13 @@ export interface Brand {
   website: string;
   category: string;
   isActive: boolean;
-  salesCount: number;
+  salesCount?: number;
   createdAt: string;
 }
 
 export interface Category {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   slug: string;
   icon: string;

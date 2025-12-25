@@ -1,12 +1,13 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import SaleCard from "@/components/ui/SaleCard";
+import ShareButtons from "@/components/ui/ShareButtons";
 import { useFavorites } from "@/hooks/useFavorites";
-import { sales, brands } from "@/data/mockData";
+import { Sale, Brand } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,25 +20,162 @@ export default function SalePage({ params }: PageProps) {
   const { isFavorite, toggleFavorite, loading: favLoading } = useFavorites();
   const [showToast, setShowToast] = useState("");
 
-  const sale = sales.find((s) => s.id === id);
+  const [sale, setSale] = useState<Sale | null>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [relatedSales, setRelatedSales] = useState<Sale[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch sale data
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+
+        // Fetch sale details
+        const saleRes = await fetch(`/api/sales/${id}`);
+        const saleData = await saleRes.json();
+
+        if (!saleData.success || !saleData.data) {
+          notFound();
+          return;
+        }
+
+        setSale(saleData.data);
+
+        // Track view
+        fetch(`/api/sales/views`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ saleId: id }),
+        });
+
+        // Fetch brand details
+        if (saleData.data.brandId) {
+          const brandRes = await fetch(`/api/brands/${saleData.data.brandId}`);
+          const brandData = await brandRes.json();
+          if (brandData.success) {
+            setBrand(brandData.data);
+          }
+        }
+
+        // Fetch related sales
+        const relatedRes = await fetch(
+          `/api/sales?category=${saleData.data.category}&limit=3`
+        );
+        const relatedData = await relatedRes.json();
+        if (relatedData.success) {
+          setRelatedSales(
+            relatedData.data
+              .filter((s: Sale) => (s._id || s.id) !== id)
+              .slice(0, 3)
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching sale:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="loading-page">
+        <div className="container">
+          <div className="skeleton-breadcrumb"></div>
+          <div className="skeleton-grid">
+            <div className="skeleton-image"></div>
+            <div className="skeleton-details">
+              <div className="skeleton-line short"></div>
+              <div className="skeleton-line full"></div>
+              <div className="skeleton-line medium"></div>
+              <div className="skeleton-line full"></div>
+            </div>
+          </div>
+        </div>
+        <style jsx>{`
+          .loading-page {
+            padding: 2rem 0 4rem;
+          }
+          .skeleton-breadcrumb {
+            height: 20px;
+            width: 200px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+          }
+          .skeleton-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+          }
+          .skeleton-image {
+            height: 400px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 16px;
+          }
+          .skeleton-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+          .skeleton-line {
+            height: 24px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+          }
+          .skeleton-line.short {
+            width: 30%;
+          }
+          .skeleton-line.medium {
+            width: 60%;
+          }
+          .skeleton-line.full {
+            width: 100%;
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+          @media (max-width: 1024px) {
+            .skeleton-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   if (!sale) {
     notFound();
   }
 
-  const brand = brands.find((b) => b.id === sale.brandId);
-  const relatedSales = sales
-    .filter(
-      (s) =>
-        s.id !== sale.id &&
-        (s.brandId === sale.brandId || s.category === sale.category)
-    )
-    .slice(0, 3);
-
   const daysLeft = Math.ceil(
     (new Date(sale.endDate).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   );
+
+  const isExpired = daysLeft < 0;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-PK", {
@@ -62,7 +200,17 @@ export default function SalePage({ params }: PageProps) {
     }
   };
 
+  const handleShopNowClick = () => {
+    // Track click
+    fetch("/api/sales/clicks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ saleId: sale._id || sale.id }),
+    });
+  };
+
   const isSaved = isFavorite(id);
+  const saleId = sale._id || sale.id;
 
   return (
     <>
@@ -101,7 +249,13 @@ export default function SalePage({ params }: PageProps) {
                 {sale.isFeatured && (
                   <span className="featured-badge">🔥 HOT DEAL</span>
                 )}
+                {isExpired && <span className="expired-badge">EXPIRED</span>}
               </div>
+              {sale.views && (
+                <div className="views-count">
+                  👁 {sale.views.toLocaleString()} views
+                </div>
+              )}
             </div>
 
             {/* Details */}
@@ -155,53 +309,64 @@ export default function SalePage({ params }: PageProps) {
                 <div className="meta-item">
                   <span className="meta-label">Time Left</span>
                   <span
-                    className={`meta-value ${daysLeft <= 3 ? "urgent" : ""}`}
+                    className={`meta-value ${daysLeft <= 3 ? "urgent" : ""} ${
+                      isExpired ? "expired" : ""
+                    }`}
                   >
-                    {daysLeft > 0 ? `${daysLeft} days` : "Ending today!"}
+                    {isExpired
+                      ? "Expired"
+                      : daysLeft > 0
+                      ? `${daysLeft} days`
+                      : "Ending today!"}
                   </span>
                 </div>
               </div>
 
               {/* CTA Buttons */}
               <div className="cta-buttons">
-                <Link
-                  href={`/checkout/${sale.id}`}
-                  className="btn btn-primary btn-lg"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="9" cy="21" r="1" />
-                    <circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-                  </svg>
-                  Buy Now
-                </Link>
-                <a
-                  href={sale.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-lg btn-outline"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                  Visit Store
-                </a>
+                {!isExpired && (
+                  <>
+                    <Link
+                      href={`/checkout/${saleId}`}
+                      className="btn btn-primary btn-lg"
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="9" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+                      </svg>
+                      Buy Now
+                    </Link>
+                    <a
+                      href={sale.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-lg btn-outline"
+                      onClick={handleShopNowClick}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      Visit Store
+                    </a>
+                  </>
+                )}
                 <button
                   className={`btn btn-lg favorite-btn ${
                     isSaved ? "saved" : "btn-outline"
@@ -225,68 +390,11 @@ export default function SalePage({ params }: PageProps) {
 
               {/* Share */}
               <div className="share-section">
-                <span>Share this deal:</span>
-                <div className="share-buttons">
-                  <button
-                    className="share-btn whatsapp"
-                    title="Share on WhatsApp"
-                    onClick={() => {
-                      const url = `https://wa.me/?text=${encodeURIComponent(
-                        `Check out this deal: ${sale.title} - ${sale.discountPercentage}% OFF!\n${window.location.href}`
-                      )}`;
-                      window.open(url, "_blank");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                  </button>
-                  <button
-                    className="share-btn facebook"
-                    title="Share on Facebook"
-                    onClick={() => {
-                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                        window.location.href
-                      )}`;
-                      window.open(url, "_blank", "width=600,height=400");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </button>
-                  <button
-                    className="share-btn copy"
-                    title="Copy Link"
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      setShowToast("Link copied to clipboard!");
-                      setTimeout(() => setShowToast(""), 3000);
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                    </svg>
-                  </button>
-                </div>
+                <ShareButtons
+                  url={`/sales/${saleId}`}
+                  title={`${sale.title} - ${sale.discountPercentage}% OFF!`}
+                  description={sale.description}
+                />
               </div>
             </div>
           </div>
@@ -305,7 +413,7 @@ export default function SalePage({ params }: PageProps) {
             </div>
             <div className="sales-grid">
               {relatedSales.map((s) => (
-                <SaleCard key={s.id} sale={s} />
+                <SaleCard key={s._id || s.id} sale={s} />
               ))}
             </div>
           </div>
@@ -410,6 +518,25 @@ export default function SalePage({ params }: PageProps) {
           border-radius: var(--radius-full);
           font-weight: 600;
           font-size: 0.875rem;
+        }
+
+        .expired-badge {
+          position: absolute;
+          bottom: 1.5rem;
+          left: 1.5rem;
+          background: #6b7280;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: var(--radius-full);
+          font-weight: 600;
+          font-size: 0.875rem;
+        }
+
+        .views-count {
+          margin-top: 1rem;
+          text-align: center;
+          font-size: 0.875rem;
+          color: var(--text-secondary);
         }
 
         .sale-details {
@@ -517,6 +644,10 @@ export default function SalePage({ params }: PageProps) {
           color: #ef4444;
         }
 
+        .meta-value.expired {
+          color: #6b7280;
+        }
+
         .cta-buttons {
           display: flex;
           gap: 1rem;
@@ -580,52 +711,8 @@ export default function SalePage({ params }: PageProps) {
         }
 
         .share-section {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
           padding-top: 1rem;
           border-top: 1px solid var(--border-color);
-        }
-
-        .share-section span {
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-        }
-
-        .share-buttons {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .share-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all var(--transition-fast);
-        }
-
-        .share-btn.whatsapp {
-          background: #25d366;
-          color: white;
-        }
-
-        .share-btn.facebook {
-          background: #1877f2;
-          color: white;
-        }
-
-        .share-btn.copy {
-          background: var(--bg-light);
-          color: var(--text-secondary);
-        }
-
-        .share-btn:hover {
-          transform: scale(1.1);
         }
 
         .related-sales {
@@ -723,11 +810,6 @@ export default function SalePage({ params }: PageProps) {
           }
 
           .pricing {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .share-section {
             flex-direction: column;
             align-items: flex-start;
           }

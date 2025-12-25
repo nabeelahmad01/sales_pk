@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendPasswordResetEmail(email: string, token: string, name: string) {
   const resetUrl = `${process.env.NEXTAUTH_URL || 'https://sales-pk.vercel.app'}/reset-password?token=${token}`;
   
-  const { data, error } = await resend.emails.send({
-    from: 'ShowSales.pk <onboarding@resend.dev>',
+  await sendEmail({
     to: email,
     subject: 'Reset Your Password - ShowSales.pk',
     html: `
@@ -53,13 +50,6 @@ async function sendPasswordResetEmail(email: string, token: string, name: string
       </html>
     `,
   });
-
-  if (error) {
-    console.error('Resend error:', error);
-    throw new Error('Failed to send email');
-  }
-
-  return data;
 }
 
 export async function POST(request: NextRequest) {

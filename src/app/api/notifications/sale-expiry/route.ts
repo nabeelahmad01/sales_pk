@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email';
 import dbConnect from '@/lib/mongodb';
 import Sale from '@/models/Sale';
 import User from '@/models/User';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // This should be called by a cron job daily
 // Add to vercel.json: { "crons": [{ "path": "/api/notifications/sale-expiry", "schedule": "0 9 * * *" }] }
@@ -47,8 +45,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (userEndingSales.length > 0) {
-        await resend.emails.send({
-          from: 'ShowSales.pk <onboarding@resend.dev>',
+        await sendEmail({
           to: user.email,
           subject: '⏰ Your Saved Sales are Ending Soon!',
           html: `

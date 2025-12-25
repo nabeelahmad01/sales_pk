@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import SaleCard from "@/components/ui/SaleCard";
 import BrandCard from "@/components/ui/BrandCard";
-import { sales, brands, categories } from "@/data/mockData";
+import { Sale, Brand, Category } from "@/types";
 
 export default function HomePage() {
-  const featuredSales = sales.filter((sale) => sale.isFeatured);
-  const topBrands = brands.slice(0, 4);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Subscribe form state
   const [subscribeEmail, setSubscribeEmail] = useState("");
@@ -16,6 +19,39 @@ export default function HomePage() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [subscribeMessage, setSubscribeMessage] = useState("");
+
+  // Fetch data from API
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [salesRes, brandsRes, categoriesRes] = await Promise.all([
+          fetch("/api/sales?active=true"),
+          fetch("/api/brands"),
+          fetch("/api/categories"),
+        ]);
+
+        const [salesData, brandsData, categoriesData] = await Promise.all([
+          salesRes.json(),
+          brandsRes.json(),
+          categoriesRes.json(),
+        ]);
+
+        if (salesData.success) setSales(salesData.data);
+        if (brandsData.success) setBrands(brandsData.data);
+        if (categoriesData.success) setCategories(categoriesData.data);
+      } catch (err) {
+        setError("Failed to load data");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const featuredSales = sales.filter((sale) => sale.isFeatured);
+  const topBrands = brands.slice(0, 4);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +82,96 @@ export default function HomePage() {
       setTimeout(() => setSubscribeStatus("idle"), 3000);
     }
   };
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <>
+        <section className="hero">
+          <div className="hero-bg"></div>
+          <div className="container">
+            <div className="hero-content">
+              <div className="skeleton-badge"></div>
+              <div className="skeleton-title"></div>
+              <div className="skeleton-subtitle"></div>
+            </div>
+          </div>
+        </section>
+        <style jsx>{`
+          .hero {
+            position: relative;
+            padding: 5rem 0 6rem;
+            overflow: hidden;
+          }
+          .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+              135deg,
+              rgba(139, 92, 246, 0.08) 0%,
+              rgba(236, 72, 153, 0.08) 100%
+            );
+            z-index: -1;
+          }
+          .hero-content {
+            max-width: 800px;
+            text-align: center;
+            margin: 0 auto;
+          }
+          .skeleton-badge {
+            height: 40px;
+            width: 250px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 20px;
+            margin: 0 auto 1.5rem;
+          }
+          .skeleton-title {
+            height: 60px;
+            width: 100%;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+          }
+          .skeleton-subtitle {
+            height: 24px;
+            width: 80%;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin: 0 auto;
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -274,7 +400,7 @@ export default function HomePage() {
             {categories.map((category, index) => (
               <Link
                 href={`/sales?category=${category.slug}`}
-                key={category.id}
+                key={category._id || category.id}
                 className="category-card"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -395,9 +521,13 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="sales-grid">
-            {featuredSales.map((sale) => (
-              <SaleCard key={sale.id} sale={sale} />
-            ))}
+            {featuredSales.length > 0 ? (
+              featuredSales.map((sale) => (
+                <SaleCard key={sale._id || sale.id} sale={sale} />
+              ))
+            ) : (
+              <p className="no-sales">No featured sales at the moment.</p>
+            )}
           </div>
         </div>
 
@@ -432,6 +562,13 @@ export default function HomePage() {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
+          }
+
+          .no-sales {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 3rem;
           }
 
           @media (max-width: 1200px) {
@@ -483,7 +620,7 @@ export default function HomePage() {
           </div>
           <div className="brands-grid">
             {topBrands.map((brand) => (
-              <BrandCard key={brand.id} brand={brand} />
+              <BrandCard key={brand._id || brand.id} brand={brand} />
             ))}
           </div>
         </div>
@@ -559,12 +696,14 @@ export default function HomePage() {
               );
               return (
                 <Link
-                  href={`/sales/${sale.id}`}
-                  key={sale.id}
+                  href={`/sales/${sale._id || sale.id}`}
+                  key={sale._id || sale.id}
                   className="ending-card"
                 >
                   <div className="ending-timer">
-                    <span className="timer-value">{daysLeft}</span>
+                    <span className="timer-value">
+                      {daysLeft > 0 ? daysLeft : 0}
+                    </span>
                     <span className="timer-label">days left</span>
                   </div>
                   <div className="ending-info">
@@ -806,91 +945,78 @@ export default function HomePage() {
             background: rgba(255, 255, 255, 0.2);
           }
 
-          .cta-form .btn {
-            background: white;
-            color: var(--primary-purple);
-          }
-
-          .cta-form .btn:hover {
-            background: var(--secondary-navy);
-            color: white;
-          }
-
           .cta-note {
             font-size: 0.875rem;
             opacity: 0.8;
           }
 
-          .subscribe-success,
-          .subscribe-error {
-            padding: 1rem 1.5rem;
+          .subscribe-success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            padding: 1rem;
             border-radius: var(--radius-lg);
             margin-bottom: 1rem;
-            font-weight: 500;
-          }
-
-          .subscribe-success {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.5);
           }
 
           .subscribe-error {
             background: rgba(239, 68, 68, 0.2);
             border: 1px solid rgba(239, 68, 68, 0.5);
-          }
-
-          .cta-form .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1rem;
           }
 
           .cta-decoration {
             position: absolute;
             inset: 0;
-            z-index: 1;
             pointer-events: none;
           }
 
           .emoji-float {
             position: absolute;
-            font-size: 3rem;
+            font-size: 2rem;
             animation: floatEmoji 6s ease-in-out infinite;
           }
 
           .emoji-1 {
-            top: 10%;
+            top: 20%;
             left: 10%;
             animation-delay: 0s;
           }
+
           .emoji-2 {
-            top: 20%;
+            top: 30%;
             right: 15%;
-            animation-delay: 1s;
+            animation-delay: 1.5s;
           }
+
           .emoji-3 {
-            bottom: 15%;
+            bottom: 25%;
             left: 15%;
-            animation-delay: 2s;
-          }
-          .emoji-4 {
-            bottom: 10%;
-            right: 10%;
             animation-delay: 3s;
+          }
+
+          .emoji-4 {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 4.5s;
           }
 
           @keyframes floatEmoji {
             0%,
             100% {
               transform: translateY(0) rotate(0deg);
+              opacity: 0.6;
             }
             50% {
               transform: translateY(-20px) rotate(10deg);
+              opacity: 1;
             }
           }
 
           @media (max-width: 768px) {
             .cta-card {
-              padding: 3rem 1.5rem;
+              padding: 2.5rem 1.5rem;
             }
 
             .cta-card h2 {
@@ -899,15 +1025,16 @@ export default function HomePage() {
 
             .cta-form {
               flex-direction: column;
+              align-items: center;
             }
 
             .cta-input {
               width: 100%;
+              max-width: 300px;
             }
 
             .emoji-float {
-              font-size: 2rem;
-              opacity: 0.5;
+              display: none;
             }
           }
         `}</style>

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email';
 import dbConnect from '@/lib/mongodb';
 import Sale from '@/models/Sale';
 import User from '@/models/User';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // This should be called by a cron job (e.g., Vercel Cron)
 // Add to vercel.json: { "crons": [{ "path": "/api/notifications/price-drop", "schedule": "0 */6 * * *" }] }
@@ -51,8 +49,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (userDrops.length > 0) {
-        await resend.emails.send({
-          from: 'ShowSales.pk <onboarding@resend.dev>',
+        await sendEmail({
           to: user.email,
           subject: '🔔 Price Drop Alert - Your Saved Sales!',
           html: `
