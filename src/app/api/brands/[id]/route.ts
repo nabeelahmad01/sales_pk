@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Brand from '@/models/Brand';
+import mongoose from 'mongoose';
 
-// GET single brand
+// GET single brand by ID or slug
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +12,17 @@ export async function GET(
     await dbConnect();
     const { id } = await params;
     
-    const brand = await Brand.findById(id);
+    let brand = null;
+    
+    // Check if it's a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      brand = await Brand.findById(id);
+    }
+    
+    // If not found by ID, try finding by slug
+    if (!brand) {
+      brand = await Brand.findOne({ slug: id });
+    }
     
     if (!brand) {
       return NextResponse.json(
@@ -29,6 +40,7 @@ export async function GET(
     );
   }
 }
+
 
 // PUT update brand
 export async function PUT(

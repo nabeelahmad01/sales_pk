@@ -69,9 +69,18 @@ export default function BrandDashboardPage() {
       const reviewsRes = await fetch(`/api/reviews?brandId=${brandId}&limit=5`);
       const reviewsData = await reviewsRes.json();
 
-      const sales = salesData.success ? salesData.data : [];
-      const orders = ordersData.success ? ordersData.data : [];
-      const reviews = reviewsData.success ? reviewsData.data : [];
+      const sales =
+        salesData.success && Array.isArray(salesData.data)
+          ? salesData.data
+          : [];
+      const orders =
+        ordersData.success && Array.isArray(ordersData.data)
+          ? ordersData.data
+          : [];
+      const reviews =
+        reviewsData.success && Array.isArray(reviewsData.data)
+          ? reviewsData.data
+          : [];
 
       // Calculate stats
       const activeSales = sales.filter((s: any) => s.isActive).length;

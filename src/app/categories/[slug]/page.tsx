@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import SaleCard from '@/components/ui/SaleCard';
-import { categories, sales } from '@/data/mockData';
+import { use, useState, useEffect } from "react";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import SaleCard from "@/components/ui/SaleCard";
+import { Category, Sale } from "@/types";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,15 +12,147 @@ interface PageProps {
 
 export default function CategoryPage({ params }: PageProps) {
   const { slug } = use(params);
-  const category = categories.find(c => c.slug === slug);
-  
-  if (!category) {
+  const [category, setCategory] = useState<Category | null>(null);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFoundState, setNotFoundState] = useState(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch category by slug
+        const categoryRes = await fetch(`/api/categories/${slug}`);
+        const categoryData = await categoryRes.json();
+
+        if (!categoryData.success || !categoryData.data) {
+          setNotFoundState(true);
+          setLoading(false);
+          return;
+        }
+
+        setCategory(categoryData.data);
+
+        // Fetch sales for this category
+        const salesRes = await fetch(
+          `/api/sales?category=${categoryData.data.name}&active=true`
+        );
+        const salesData = await salesRes.json();
+
+        if (salesData.success) {
+          setSales(salesData.data);
+        }
+      } catch (error) {
+        console.error("Error fetching category:", error);
+        setNotFoundState(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [slug]);
+
+  if (notFoundState) {
     notFound();
   }
 
-  const categorySales = sales.filter(
-    sale => sale.category.toLowerCase() === category.name.toLowerCase() && sale.isActive
-  );
+  if (loading) {
+    return (
+      <>
+        <section className="category-hero">
+          <div className="container">
+            <div className="skeleton-back"></div>
+            <div className="category-header">
+              <div className="skeleton-icon"></div>
+              <div className="category-info">
+                <div className="skeleton-title"></div>
+                <div className="skeleton-desc"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="sales-section">
+          <div className="container">
+            <div className="loading-grid">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton-card"></div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <style jsx>{`
+          .category-hero {
+            background: linear-gradient(
+              135deg,
+              rgba(139, 92, 246, 0.08) 0%,
+              rgba(236, 72, 153, 0.08) 100%
+            );
+            padding: 2rem 0 3rem;
+          }
+          .skeleton-back {
+            width: 120px;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+          }
+          .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+          }
+          .skeleton-icon {
+            width: 100px;
+            height: 100px;
+            background: #e0e0e0;
+            border-radius: var(--radius-2xl);
+          }
+          .skeleton-title {
+            width: 200px;
+            height: 32px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+          }
+          .skeleton-desc {
+            width: 300px;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 4px;
+          }
+          .sales-section {
+            padding: 3rem 0 4rem;
+          }
+          .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+          }
+          .skeleton-card {
+            height: 280px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-xl);
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
+
+  if (!category) return null;
 
   return (
     <>
@@ -28,9 +160,16 @@ export default function CategoryPage({ params }: PageProps) {
       <section className="category-hero">
         <div className="container">
           <Link href="/categories" className="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
             </svg>
             All Categories
           </Link>
@@ -39,7 +178,7 @@ export default function CategoryPage({ params }: PageProps) {
             <div className="category-info">
               <h1>{category.name}</h1>
               <p>{category.description}</p>
-              <span className="sales-count">{categorySales.length} active sales</span>
+              <span className="sales-count">{sales.length} active sales</span>
             </div>
           </div>
         </div>
@@ -48,10 +187,10 @@ export default function CategoryPage({ params }: PageProps) {
       {/* Sales Grid */}
       <section className="sales-section">
         <div className="container">
-          {categorySales.length > 0 ? (
+          {sales.length > 0 ? (
             <div className="sales-grid">
-              {categorySales.map(sale => (
-                <SaleCard key={sale.id} sale={sale} />
+              {sales.map((sale) => (
+                <SaleCard key={sale._id || sale.id} sale={sale} />
               ))}
             </div>
           ) : (
@@ -69,7 +208,11 @@ export default function CategoryPage({ params }: PageProps) {
 
       <style jsx>{`
         .category-hero {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+          background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.08) 0%,
+            rgba(236, 72, 153, 0.08) 100%
+          );
           padding: 2rem 0 3rem;
         }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { sales, brands } from "@/data/mockData";
+import { Sale, Brand } from "@/types";
 
 interface PageProps {
   params: Promise<{ saleId: string }>;
@@ -13,11 +13,9 @@ export default function CheckoutPage({ params }: PageProps) {
   const { saleId } = use(params);
   const router = useRouter();
 
-  // Find sale from mock data
-  const sale = sales.find((s) => s.id === saleId);
-  const brand = sale ? brands.find((b) => b.id === sale.brandId) : null;
-
-  const [loading, setLoading] = useState(false);
+  const [sale, setSale] = useState<Sale | null>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
   const [error, setError] = useState("");
@@ -48,32 +46,47 @@ export default function CheckoutPage({ params }: PageProps) {
     "Gujranwala",
   ];
 
-  // If sale not found, show error
-  if (!sale) {
-    return (
-      <div className="checkout-error">
-        <h1>Error</h1>
-        <p>Sale not found</p>
-        <Link href="/">Go Back Home</Link>
-        <style jsx>{`
-          .checkout-error {
-            min-height: 50vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 1rem;
-          }
-          .checkout-error a {
-            color: var(--primary-purple);
-          }
-        `}</style>
-      </div>
-    );
-  }
+  // Fetch sale from API
+  useEffect(() => {
+    async function fetchSale() {
+      try {
+        const res = await fetch(`/api/sales/${saleId}`);
+        const data = await res.json();
 
-  const unitPrice = sale.salePrice || sale.originalPrice || 0;
+        if (data.success && data.data) {
+          setSale(data.data);
+          // Fetch brand if brandId exists
+          if (data.data.brandId) {
+            try {
+              const brandRes = await fetch(
+                `/api/brands?id=${data.data.brandId}`
+              );
+              const brandData = await brandRes.json();
+              if (brandData.success && brandData.data) {
+                setBrand(
+                  Array.isArray(brandData.data)
+                    ? brandData.data[0]
+                    : brandData.data
+                );
+              }
+            } catch (err) {
+              console.error("Error fetching brand:", err);
+            }
+          }
+        } else {
+          setError("Sale not found");
+        }
+      } catch (err) {
+        console.error("Error fetching sale:", err);
+        setError("Failed to load sale");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSale();
+  }, [saleId]);
+
+  const unitPrice = sale ? sale.salePrice || sale.originalPrice || 0 : 0;
   const totalAmount = unitPrice * quantity;
 
   const handleSubmit = async (e: React.FormEvent) => {

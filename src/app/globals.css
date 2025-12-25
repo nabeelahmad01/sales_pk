@@ -859,3 +859,61 @@ h4 {
   font-size: 0.75rem;
   color: var(--primary-purple);
 }
+
+/* Logo Upload Area */
+.logo-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.logo-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  background: var(--bg-light);
+}
+
+.logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.logo-url-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  word-break: break-all;
+  max-width: 300px;
+}
+
+/* Image Upload Area */
+.image-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.image-upload-area .image-preview {
+  width: 120px;
+  height: 80px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  background: var(--bg-light);
+}
+
+.image-upload-area .image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -1,14 +1,123 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import SaleCard from '@/components/ui/SaleCard';
-import { categories, sales } from '@/data/mockData';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import SaleCard from "@/components/ui/SaleCard";
+import { Category, Sale } from "@/types";
 
 export default function CategoriesPage() {
-  const categoriesWithSales = categories.map(cat => ({
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [categoriesRes, salesRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/sales?active=true"),
+        ]);
+
+        const [categoriesData, salesData] = await Promise.all([
+          categoriesRes.json(),
+          salesRes.json(),
+        ]);
+
+        if (categoriesData.success) setCategories(categoriesData.data);
+        if (salesData.success) setSales(salesData.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const categoriesWithSales = categories.map((cat) => ({
     ...cat,
-    sales: sales.filter(sale => sale.category.toLowerCase() === cat.name.toLowerCase() && sale.isActive)
+    sales: sales.filter(
+      (sale) =>
+        sale.category.toLowerCase() === cat.name.toLowerCase() && sale.isActive
+    ),
   }));
+
+  if (loading) {
+    return (
+      <>
+        <section className="page-header">
+          <div className="container">
+            <h1>Categories</h1>
+            <p>Browse sales by category</p>
+          </div>
+        </section>
+        <section className="categories-section">
+          <div className="container">
+            <div className="loading-grid">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton-card"></div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <style jsx>{`
+          .page-header {
+            background: linear-gradient(
+              135deg,
+              rgba(139, 92, 246, 0.08) 0%,
+              rgba(236, 72, 153, 0.08) 100%
+            );
+            padding: 3rem 0;
+            text-align: center;
+          }
+          .page-header h1 {
+            margin-bottom: 0.5rem;
+          }
+          .page-header p {
+            color: var(--text-secondary);
+          }
+          .categories-section {
+            padding: 3rem 0;
+          }
+          .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+          }
+          .skeleton-card {
+            height: 200px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-xl);
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+          @media (max-width: 1024px) {
+            .loading-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          @media (max-width: 768px) {
+            .loading-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -23,46 +132,63 @@ export default function CategoriesPage() {
       {/* Categories Grid */}
       <section className="categories-section">
         <div className="container">
-          <div className="categories-grid">
-            {categories.map(category => (
-              <Link href={`/categories/${category.slug}`} key={category.id} className="category-card">
-                <span className="category-icon">{category.icon}</span>
-                <h3>{category.name}</h3>
-                <p>{category.description}</p>
-                <span className="category-count">{category.salesCount} sales</span>
-              </Link>
-            ))}
-          </div>
+          {categories.length > 0 ? (
+            <div className="categories-grid">
+              {categories.map((category) => (
+                <Link
+                  href={`/categories/${category.slug}`}
+                  key={category._id || category.id}
+                  className="category-card"
+                >
+                  <span className="category-icon">{category.icon}</span>
+                  <h3>{category.name}</h3>
+                  <p>{category.description}</p>
+                  <span className="category-count">
+                    {category.salesCount || 0} sales
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>No categories found.</p>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Featured Categories */}
-      {categoriesWithSales.map(cat => (
-        cat.sales.length > 0 && (
-          <section key={cat.id} className="category-section">
-            <div className="container">
-              <div className="section-header">
-                <div className="section-title">
-                  <span className="section-icon">{cat.icon}</span>
-                  <h2>{cat.name}</h2>
+      {categoriesWithSales.map(
+        (cat) =>
+          cat.sales.length > 0 && (
+            <section key={cat._id || cat.id} className="category-section">
+              <div className="container">
+                <div className="section-header">
+                  <div className="section-title">
+                    <span className="section-icon">{cat.icon}</span>
+                    <h2>{cat.name}</h2>
+                  </div>
+                  <Link href={`/categories/${cat.slug}`} className="view-all">
+                    View All →
+                  </Link>
                 </div>
-                <Link href={`/categories/${cat.slug}`} className="view-all">
-                  View All →
-                </Link>
+                <div className="sales-grid">
+                  {cat.sales.slice(0, 3).map((sale) => (
+                    <SaleCard key={sale._id || sale.id} sale={sale} />
+                  ))}
+                </div>
               </div>
-              <div className="sales-grid">
-                {cat.sales.slice(0, 3).map(sale => (
-                  <SaleCard key={sale.id} sale={sale} />
-                ))}
-              </div>
-            </div>
-          </section>
-        )
-      ))}
+            </section>
+          )
+      )}
 
       <style jsx>{`
         .page-header {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+          background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.08) 0%,
+            rgba(236, 72, 153, 0.08) 100%
+          );
           padding: 3rem 0;
           text-align: center;
         }
@@ -174,6 +300,12 @@ export default function CategoriesPage() {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 1.5rem;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 3rem;
+          color: var(--text-secondary);
         }
 
         @media (max-width: 1024px) {

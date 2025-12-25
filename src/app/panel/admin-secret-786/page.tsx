@@ -1,12 +1,107 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { sales, brands } from "@/data/mockData";
+import { Sale, Brand } from "@/types";
 
 export default function AdminDashboard() {
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [salesRes, brandsRes] = await Promise.all([
+          fetch("/api/sales"),
+          fetch("/api/brands"),
+        ]);
+
+        const [salesData, brandsData] = await Promise.all([
+          salesRes.json(),
+          brandsRes.json(),
+        ]);
+
+        if (salesData.success) setSales(salesData.data);
+        if (brandsData.success) setBrands(brandsData.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   const activeSales = sales.filter((s) => s.isActive).length;
   const featuredSales = sales.filter((s) => s.isFeatured).length;
   const recentSales = sales.slice(0, 5);
+
+  if (loading) {
+    return (
+      <>
+        <div className="dashboard">
+          <div className="dashboard-header">
+            <div>
+              <h1>Dashboard</h1>
+              <p>Loading...</p>
+            </div>
+          </div>
+          <div className="stats-grid">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="stat-card skeleton"></div>
+            ))}
+          </div>
+        </div>
+        <style jsx>{`
+          .dashboard-header {
+            margin-bottom: 2rem;
+          }
+          .dashboard-header h1 {
+            margin-bottom: 0.25rem;
+          }
+          .dashboard-header p {
+            color: var(--text-secondary);
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+          }
+          .stat-card.skeleton {
+            height: 100px;
+            background: linear-gradient(
+              90deg,
+              #f0f0f0 25%,
+              #e0e0e0 50%,
+              #f0f0f0 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-xl);
+          }
+          @keyframes shimmer {
+            0% {
+              background-position: 200% 0;
+            }
+            100% {
+              background-position: -200% 0;
+            }
+          }
+          @media (max-width: 1200px) {
+            .stats-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+          @media (max-width: 768px) {
+            .stats-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -17,7 +112,10 @@ export default function AdminDashboard() {
             <h1>Dashboard</h1>
             <p>Welcome back! Here's what's happening with ShowSales.</p>
           </div>
-          <Link href="/admin/sales/new" className="btn btn-primary">
+          <Link
+            href="/panel/admin-secret-786/sales"
+            className="btn btn-primary"
+          >
             <svg
               width="20"
               height="20"
@@ -120,54 +218,60 @@ export default function AdminDashboard() {
         <div className="recent-section">
           <div className="section-header">
             <h2>Recent Sales</h2>
-            <Link href="/admin/sales" className="link">
+            <Link href="/panel/admin-secret-786/sales" className="link">
               View All →
             </Link>
           </div>
           <div className="table-card">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Sale</th>
-                  <th>Brand</th>
-                  <th>Discount</th>
-                  <th>Status</th>
-                  <th>End Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSales.map((sale) => (
-                  <tr key={sale.id}>
-                    <td>
-                      <div className="sale-info">
-                        <img
-                          src={sale.image}
-                          alt={sale.title}
-                          className="sale-thumb"
-                        />
-                        <span>{sale.title}</span>
-                      </div>
-                    </td>
-                    <td>{sale.brandName}</td>
-                    <td>
-                      <span className="discount-badge">
-                        {sale.discountPercentage}%
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`status-badge ${
-                          sale.isActive ? "active" : "inactive"
-                        }`}
-                      >
-                        {sale.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td>{new Date(sale.endDate).toLocaleDateString()}</td>
+            {recentSales.length > 0 ? (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Sale</th>
+                    <th>Brand</th>
+                    <th>Discount</th>
+                    <th>Status</th>
+                    <th>End Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentSales.map((sale) => (
+                    <tr key={sale._id || sale.id}>
+                      <td>
+                        <div className="sale-info">
+                          <img
+                            src={sale.image}
+                            alt={sale.title}
+                            className="sale-thumb"
+                          />
+                          <span>{sale.title}</span>
+                        </div>
+                      </td>
+                      <td>{sale.brandName}</td>
+                      <td>
+                        <span className="discount-badge">
+                          {sale.discountPercentage}%
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`status-badge ${
+                            sale.isActive ? "active" : "inactive"
+                          }`}
+                        >
+                          {sale.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>{new Date(sale.endDate).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="empty-table">
+                <p>No sales yet. Add your first sale!</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -175,15 +279,18 @@ export default function AdminDashboard() {
         <div className="quick-actions">
           <h2>Quick Actions</h2>
           <div className="actions-grid">
-            <Link href="/admin/sales/new" className="action-card">
+            <Link href="/panel/admin-secret-786/sales" className="action-card">
               <span className="action-icon">🏷️</span>
-              <span className="action-text">Add New Sale</span>
+              <span className="action-text">Manage Sales</span>
             </Link>
-            <Link href="/admin/brands/new" className="action-card">
+            <Link href="/panel/admin-secret-786/brands" className="action-card">
               <span className="action-icon">🏢</span>
-              <span className="action-text">Add New Brand</span>
+              <span className="action-text">Manage Brands</span>
             </Link>
-            <Link href="/admin/subscribers" className="action-card">
+            <Link
+              href="/panel/admin-secret-786/subscribers"
+              className="action-card"
+            >
               <span className="action-icon">📧</span>
               <span className="action-text">View Subscribers</span>
             </Link>
@@ -306,6 +413,12 @@ export default function AdminDashboard() {
           border-radius: var(--radius-xl);
           box-shadow: var(--shadow-md);
           overflow: hidden;
+        }
+
+        .empty-table {
+          padding: 3rem;
+          text-align: center;
+          color: var(--text-secondary);
         }
 
         .table {

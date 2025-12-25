@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 
 interface Sale {
   _id: string;
@@ -32,44 +32,46 @@ interface Brand {
 }
 
 const CATEGORIES = [
-  'Fashion',
-  'Electronics',
-  'Food & Dining',
-  'Beauty & Health',
-  'Home & Living',
-  'Sports & Fitness',
-  'Travel',
-  'Entertainment',
-  'Education',
-  'Other'
+  "Fashion",
+  "Electronics",
+  "Food & Dining",
+  "Beauty & Health",
+  "Home & Living",
+  "Sports & Fitness",
+  "Travel",
+  "Entertainment",
+  "Education",
+  "Other",
 ];
 
 export default function AdminSalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterBrand, setFilterBrand] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterBrand, setFilterBrand] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    brandId: '',
-    brandName: '',
-    category: '',
+    title: "",
+    description: "",
+    brandId: "",
+    brandName: "",
+    category: "",
     discountPercentage: 0,
     originalPrice: 0,
     salePrice: 0,
-    image: '',
-    startDate: '',
-    endDate: '',
+    image: "",
+    startDate: "",
+    endDate: "",
     isActive: true,
     isFeatured: false,
-    link: '',
-    affiliateUrl: '',
+    link: "",
+    affiliateUrl: "",
   });
 
   // Fetch sales and brands
@@ -80,13 +82,13 @@ export default function AdminSalesPage() {
 
   const fetchSales = async () => {
     try {
-      const res = await fetch('/api/sales');
+      const res = await fetch("/api/sales");
       const data = await res.json();
       if (data.success) {
         setSales(data.data);
       }
     } catch (error) {
-      console.error('Error fetching sales:', error);
+      console.error("Error fetching sales:", error);
     } finally {
       setLoading(false);
     }
@@ -94,98 +96,104 @@ export default function AdminSalesPage() {
 
   const fetchBrands = async () => {
     try {
-      const res = await fetch('/api/brands?all=true');
+      const res = await fetch("/api/brands?all=true");
       const data = await res.json();
       if (data.success) {
         setBrands(data.data);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   };
 
   // Filter sales
-  const filteredSales = sales.filter(sale => {
-    const matchesSearch = sale.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          sale.brandName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBrand = filterBrand === 'all' || sale.brandId === filterBrand;
-    const matchesStatus = filterStatus === 'all' || 
-                          (filterStatus === 'active' && sale.isActive) ||
-                          (filterStatus === 'inactive' && !sale.isActive) ||
-                          (filterStatus === 'featured' && sale.isFeatured);
+  const filteredSales = sales.filter((sale) => {
+    const matchesSearch =
+      sale.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sale.brandName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesBrand = filterBrand === "all" || sale.brandId === filterBrand;
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && sale.isActive) ||
+      (filterStatus === "inactive" && !sale.isActive) ||
+      (filterStatus === "featured" && sale.isFeatured);
     return matchesSearch && matchesBrand && matchesStatus;
   });
 
   const handleBrandChange = (brandId: string) => {
-    const selectedBrand = brands.find(b => b._id === brandId);
+    const selectedBrand = brands.find((b) => b._id === brandId);
     if (selectedBrand) {
       setFormData({
         ...formData,
         brandId: brandId,
         brandName: selectedBrand.name,
-        category: selectedBrand.category || formData.category
+        category: selectedBrand.category || formData.category,
       });
     } else {
-      setFormData({ ...formData, brandId: '', brandName: '' });
+      setFormData({ ...formData, brandId: "", brandName: "" });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
-      const url = editingSale ? `/api/sales/${editingSale._id}` : '/api/sales';
-      const method = editingSale ? 'PUT' : 'POST';
-      
+      const url = editingSale ? `/api/sales/${editingSale._id}` : "/api/sales";
+      const method = editingSale ? "PUT" : "POST";
+
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           discountPercentage: Number(formData.discountPercentage),
-          originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
-          salePrice: formData.salePrice ? Number(formData.salePrice) : undefined,
+          originalPrice: formData.originalPrice
+            ? Number(formData.originalPrice)
+            : undefined,
+          salePrice: formData.salePrice
+            ? Number(formData.salePrice)
+            : undefined,
         }),
       });
-      
+
       const data = await res.json();
       if (data.success) {
         fetchSales();
         closeModal();
       } else {
-        alert(data.error || 'Failed to save sale');
+        alert(data.error || "Failed to save sale");
       }
     } catch (error) {
-      console.error('Error saving sale:', error);
-      alert('Failed to save sale');
+      console.error("Error saving sale:", error);
+      alert("Failed to save sale");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this sale?')) return;
-    
+    if (!confirm("Are you sure you want to delete this sale?")) return;
+
     try {
-      const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/sales/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         fetchSales();
       } else {
-        alert(data.error || 'Failed to delete sale');
+        alert(data.error || "Failed to delete sale");
       }
     } catch (error) {
-      console.error('Error deleting sale:', error);
-      alert('Failed to delete sale');
+      console.error("Error deleting sale:", error);
+      alert("Failed to delete sale");
     }
   };
 
   const toggleFeatured = async (sale: Sale) => {
     try {
       const res = await fetch(`/api/sales/${sale._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFeatured: !sale.isFeatured }),
       });
       const data = await res.json();
@@ -193,15 +201,15 @@ export default function AdminSalesPage() {
         fetchSales();
       }
     } catch (error) {
-      console.error('Error updating sale:', error);
+      console.error("Error updating sale:", error);
     }
   };
 
   const toggleActive = async (sale: Sale) => {
     try {
       const res = await fetch(`/api/sales/${sale._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !sale.isActive }),
       });
       const data = await res.json();
@@ -209,30 +217,62 @@ export default function AdminSalesPage() {
         fetchSales();
       }
     } catch (error) {
-      console.error('Error updating sale:', error);
+      console.error("Error updating sale:", error);
+    }
+  };
+
+  // Handle image file upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "sales");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFormData({ ...formData, image: data.data.url });
+      } else {
+        alert(data.error || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   const openAddModal = () => {
     setEditingSale(null);
-    const today = new Date().toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
     setFormData({
-      title: '',
-      description: '',
-      brandId: '',
-      brandName: '',
-      category: '',
+      title: "",
+      description: "",
+      brandId: "",
+      brandName: "",
+      category: "",
       discountPercentage: 0,
       originalPrice: 0,
       salePrice: 0,
-      image: '',
+      image: "",
       startDate: today,
       endDate: nextWeek,
       isActive: true,
       isFeatured: false,
-      link: '',
-      affiliateUrl: '',
+      link: "",
+      affiliateUrl: "",
     });
     setShowModal(true);
   };
@@ -249,12 +289,12 @@ export default function AdminSalesPage() {
       originalPrice: sale.originalPrice || 0,
       salePrice: sale.salePrice || 0,
       image: sale.image,
-      startDate: new Date(sale.startDate).toISOString().split('T')[0],
-      endDate: new Date(sale.endDate).toISOString().split('T')[0],
+      startDate: new Date(sale.startDate).toISOString().split("T")[0],
+      endDate: new Date(sale.endDate).toISOString().split("T")[0],
       isActive: sale.isActive,
       isFeatured: sale.isFeatured,
       link: sale.link,
-      affiliateUrl: sale.affiliateUrl || '',
+      affiliateUrl: sale.affiliateUrl || "",
     });
     setShowModal(true);
   };
@@ -269,8 +309,14 @@ export default function AdminSalesPage() {
       <div className="admin-page">
         <div className="loading">Loading sales...</div>
         <style jsx>{`
-          .admin-page { max-width: 1400px; }
-          .loading { text-align: center; padding: 4rem; color: var(--text-secondary); }
+          .admin-page {
+            max-width: 1400px;
+          }
+          .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+          }
         `}</style>
       </div>
     );
@@ -286,9 +332,16 @@ export default function AdminSalesPage() {
             <p>Add, edit, or remove sales from your platform</p>
           </div>
           <button onClick={openAddModal} className="btn btn-primary">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add New Sale
           </button>
@@ -301,15 +354,21 @@ export default function AdminSalesPage() {
             <span className="stat-label">Total Sales</span>
           </div>
           <div className="stat-card">
-            <span className="stat-value">{sales.filter(s => s.isActive).length}</span>
+            <span className="stat-value">
+              {sales.filter((s) => s.isActive).length}
+            </span>
             <span className="stat-label">Active</span>
           </div>
           <div className="stat-card">
-            <span className="stat-value">{sales.filter(s => s.isFeatured).length}</span>
+            <span className="stat-value">
+              {sales.filter((s) => s.isFeatured).length}
+            </span>
             <span className="stat-label">Featured</span>
           </div>
           <div className="stat-card">
-            <span className="stat-value">{sales.reduce((acc, s) => acc + (s.views || 0), 0)}</span>
+            <span className="stat-value">
+              {sales.reduce((acc, s) => acc + (s.views || 0), 0)}
+            </span>
             <span className="stat-label">Total Views</span>
           </div>
         </div>
@@ -317,30 +376,39 @@ export default function AdminSalesPage() {
         {/* Filters */}
         <div className="filters-bar">
           <div className="search-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
               placeholder="Search sales..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <select 
-            value={filterBrand} 
-            onChange={e => setFilterBrand(e.target.value)}
+          <select
+            value={filterBrand}
+            onChange={(e) => setFilterBrand(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Brands</option>
-            {brands.map(brand => (
-              <option key={brand._id} value={brand._id}>{brand.name}</option>
+            {brands.map((brand) => (
+              <option key={brand._id} value={brand._id}>
+                {brand.name}
+              </option>
             ))}
           </select>
-          <select 
-            value={filterStatus} 
-            onChange={e => setFilterStatus(e.target.value)}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Status</option>
@@ -352,7 +420,8 @@ export default function AdminSalesPage() {
 
         {/* Results Count */}
         <div className="results-count">
-          Showing <strong>{filteredSales.length}</strong> of <strong>{sales.length}</strong> sales
+          Showing <strong>{filteredSales.length}</strong> of{" "}
+          <strong>{sales.length}</strong> sales
         </div>
 
         {/* Sales Table */}
@@ -371,58 +440,120 @@ export default function AdminSalesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredSales.map(sale => (
+              {filteredSales.map((sale) => (
                 <tr key={sale._id}>
                   <td>
                     <div className="sale-info">
-                      <img src={sale.image} alt={sale.title} className="sale-thumb" />
+                      <img
+                        src={sale.image}
+                        alt={sale.title}
+                        className="sale-thumb"
+                      />
                       <div className="sale-details">
                         <span className="sale-title">{sale.title}</span>
-                        {sale.isFeatured && <span className="featured-tag">🔥 Featured</span>}
+                        {sale.isFeatured && (
+                          <span className="featured-tag">🔥 Featured</span>
+                        )}
                       </div>
                     </div>
                   </td>
                   <td>{sale.brandName}</td>
-                  <td><span className="category-tag">{sale.category}</span></td>
-                  <td><span className="discount-badge">{sale.discountPercentage}%</span></td>
                   <td>
-                    <button 
-                      className={`status-badge ${sale.isActive ? 'active' : 'inactive'}`}
+                    <span className="category-tag">{sale.category}</span>
+                  </td>
+                  <td>
+                    <span className="discount-badge">
+                      {sale.discountPercentage}%
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className={`status-badge ${
+                        sale.isActive ? "active" : "inactive"
+                      }`}
                       onClick={() => toggleActive(sale)}
                       title="Click to toggle"
                     >
-                      {sale.isActive ? 'Active' : 'Inactive'}
+                      {sale.isActive ? "Active" : "Inactive"}
                     </button>
                   </td>
                   <td>{new Date(sale.endDate).toLocaleDateString()}</td>
                   <td>{sale.views || 0}</td>
                   <td>
                     <div className="actions">
-                      <button 
-                        className={`action-btn star ${sale.isFeatured ? 'featured' : ''}`} 
-                        title={sale.isFeatured ? 'Remove from featured' : 'Add to featured'}
+                      <button
+                        className={`action-btn star ${
+                          sale.isFeatured ? "featured" : ""
+                        }`}
+                        title={
+                          sale.isFeatured
+                            ? "Remove from featured"
+                            : "Add to featured"
+                        }
                         onClick={() => toggleFeatured(sale)}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill={sale.isFeatured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={sale.isFeatured ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                       </button>
-                      <button className="action-btn edit" title="Edit" onClick={() => openEditModal(sale)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      <button
+                        className="action-btn edit"
+                        title="Edit"
+                        onClick={() => openEditModal(sale)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
                       </button>
-                      <button className="action-btn view" title="View" onClick={() => window.open(`/sales/${sale._id}`, '_blank')}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
+                      <button
+                        className="action-btn view"
+                        title="View"
+                        onClick={() =>
+                          window.open(`/sales/${sale._id}`, "_blank")
+                        }
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
                         </svg>
                       </button>
-                      <button className="action-btn delete" title="Delete" onClick={() => handleDelete(sale._id)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      <button
+                        className="action-btn delete"
+                        title="Delete"
+                        onClick={() => handleDelete(sale._id)}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                         </svg>
                       </button>
                     </div>
@@ -445,10 +576,12 @@ export default function AdminSalesPage() {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingSale ? 'Edit Sale' : 'Add New Sale'}</h2>
-              <button className="modal-close" onClick={closeModal}>×</button>
+              <h2>{editingSale ? "Edit Sale" : "Add New Sale"}</h2>
+              <button className="modal-close" onClick={closeModal}>
+                ×
+              </button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="form-row">
@@ -457,7 +590,9 @@ export default function AdminSalesPage() {
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     required
                     placeholder="e.g., Flat 50% Off Winter Collection"
                   />
@@ -469,12 +604,14 @@ export default function AdminSalesPage() {
                   <label>Brand *</label>
                   <select
                     value={formData.brandId}
-                    onChange={e => handleBrandChange(e.target.value)}
+                    onChange={(e) => handleBrandChange(e.target.value)}
                     required
                   >
                     <option value="">Select Brand</option>
-                    {brands.map(brand => (
-                      <option key={brand._id} value={brand._id}>{brand.name}</option>
+                    {brands.map((brand) => (
+                      <option key={brand._id} value={brand._id}>
+                        {brand.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -482,12 +619,16 @@ export default function AdminSalesPage() {
                   <label>Category *</label>
                   <select
                     value={formData.category}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     required
                   >
                     <option value="">Select Category</option>
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -501,7 +642,12 @@ export default function AdminSalesPage() {
                     min="1"
                     max="100"
                     value={formData.discountPercentage}
-                    onChange={e => setFormData({ ...formData, discountPercentage: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        discountPercentage: Number(e.target.value),
+                      })
+                    }
                     required
                     placeholder="50"
                   />
@@ -511,8 +657,13 @@ export default function AdminSalesPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.originalPrice || ''}
-                    onChange={e => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
+                    value={formData.originalPrice || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        originalPrice: Number(e.target.value),
+                      })
+                    }
                     placeholder="5000"
                   />
                 </div>
@@ -521,8 +672,13 @@ export default function AdminSalesPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.salePrice || ''}
-                    onChange={e => setFormData({ ...formData, salePrice: Number(e.target.value) })}
+                    value={formData.salePrice || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        salePrice: Number(e.target.value),
+                      })
+                    }
                     placeholder="2500"
                   />
                 </div>
@@ -532,7 +688,9 @@ export default function AdminSalesPage() {
                 <label>Description *</label>
                 <textarea
                   value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   required
                   placeholder="Describe the sale offer..."
                   rows={3}
@@ -540,19 +698,33 @@ export default function AdminSalesPage() {
               </div>
 
               <div className="form-group">
-                <label>Image URL *</label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={e => setFormData({ ...formData, image: e.target.value })}
-                  required
-                  placeholder="https://example.com/sale-image.jpg"
-                />
-                {formData.image && (
-                  <div className="image-preview">
-                    <img src={formData.image} alt="Preview" />
-                  </div>
-                )}
+                <label>Sale Image *</label>
+                <div className="image-upload-area">
+                  {formData.image && (
+                    <div className="image-preview">
+                      <img src={formData.image} alt="Preview" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleImageUpload}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary upload-btn"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage
+                      ? "Uploading..."
+                      : formData.image
+                      ? "Change Image"
+                      : "Upload Image"}
+                  </button>
+                </div>
               </div>
 
               <div className="form-row two-col">
@@ -561,7 +733,9 @@ export default function AdminSalesPage() {
                   <input
                     type="date"
                     value={formData.startDate}
-                    onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -570,7 +744,9 @@ export default function AdminSalesPage() {
                   <input
                     type="date"
                     value={formData.endDate}
-                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -581,7 +757,9 @@ export default function AdminSalesPage() {
                 <input
                   type="url"
                   value={formData.link}
-                  onChange={e => setFormData({ ...formData, link: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, link: e.target.value })
+                  }
                   required
                   placeholder="https://brand.com/sale"
                 />
@@ -592,7 +770,9 @@ export default function AdminSalesPage() {
                 <input
                   type="url"
                   value={formData.affiliateUrl}
-                  onChange={e => setFormData({ ...formData, affiliateUrl: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, affiliateUrl: e.target.value })
+                  }
                   placeholder="https://affiliate-link.com/..."
                 />
               </div>
@@ -603,7 +783,9 @@ export default function AdminSalesPage() {
                     <input
                       type="checkbox"
                       checked={formData.isActive}
-                      onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isActive: e.target.checked })
+                      }
                     />
                     Sale is Active
                   </label>
@@ -613,7 +795,12 @@ export default function AdminSalesPage() {
                     <input
                       type="checkbox"
                       checked={formData.isFeatured}
-                      onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isFeatured: e.target.checked,
+                        })
+                      }
                     />
                     🔥 Featured Sale
                   </label>
@@ -621,11 +808,23 @@ export default function AdminSalesPage() {
               </div>
 
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeModal}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : (editingSale ? 'Update Sale' : 'Add Sale')}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingSale
+                    ? "Update Sale"
+                    : "Add Sale"}
                 </button>
               </div>
             </form>
@@ -816,7 +1015,7 @@ export default function AdminSalesPage() {
         }
 
         .discount-badge {
-          background: linear-gradient(135deg, #EF4444, #F97316);
+          background: linear-gradient(135deg, #ef4444, #f97316);
           color: white;
           padding: 0.25rem 0.75rem;
           border-radius: var(--radius-full);
@@ -845,7 +1044,7 @@ export default function AdminSalesPage() {
 
         .status-badge.inactive {
           background: rgba(239, 68, 68, 0.1);
-          color: #DC2626;
+          color: #dc2626;
         }
 
         .status-badge.inactive:hover {
@@ -871,12 +1070,12 @@ export default function AdminSalesPage() {
 
         .action-btn.star {
           background: rgba(245, 158, 11, 0.1);
-          color: #D97706;
+          color: #d97706;
         }
 
         .action-btn.star:hover,
         .action-btn.star.featured {
-          background: #F59E0B;
+          background: #f59e0b;
           color: white;
         }
 
@@ -896,17 +1095,17 @@ export default function AdminSalesPage() {
         }
 
         .action-btn.view:hover {
-          background: #10B981;
+          background: #10b981;
           color: white;
         }
 
         .action-btn.delete {
           background: rgba(239, 68, 68, 0.1);
-          color: #DC2626;
+          color: #dc2626;
         }
 
         .action-btn.delete:hover {
-          background: #EF4444;
+          background: #ef4444;
           color: white;
         }
 

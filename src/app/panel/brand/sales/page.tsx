@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 
 interface Sale {
@@ -55,6 +55,39 @@ export default function BrandSalesPage() {
     "Jewelry & Watches",
   ];
 
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Handle image file upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "sales");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFormData({ ...formData, image: data.data.url });
+      } else {
+        alert(data.error || "Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   useEffect(() => {
     if (brandId) {
       fetchSales();
@@ -66,7 +99,7 @@ export default function BrandSalesPage() {
       const res = await fetch(`/api/sales?brandId=${brandId}`);
       const data = await res.json();
       if (data.success) {
-        setSales(data.data);
+        setSales(Array.isArray(data.data) ? data.data : []);
       }
     } catch (error) {
       console.error("Error fetching sales:", error);
@@ -380,16 +413,33 @@ export default function BrandSalesPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label>Image URL *</label>
-                  <input
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
-                    }
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
+                  <label>Sale Image *</label>
+                  <div className="image-upload-area">
+                    {formData.image && (
+                      <div className="image-preview">
+                        <img src={formData.image} alt="Preview" />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleImageUpload}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary upload-btn"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage
+                        ? "Uploading..."
+                        : formData.image
+                        ? "Change Image"
+                        : "Upload Image"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="form-group">

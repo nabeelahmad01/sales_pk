@@ -1,23 +1,52 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { sales } from '@/data/mockData';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Sale } from "@/types";
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSales() {
+      try {
+        const res = await fetch("/api/sales");
+        const data = await res.json();
+        if (data.success) {
+          setSales(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching sales:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSales();
+  }, []);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
   const startingDay = firstDay.getDay();
-  
+
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const prevMonth = () => {
@@ -31,7 +60,7 @@ export default function CalendarPage() {
   // Get sales for a specific date
   const getSalesForDate = (day: number) => {
     const date = new Date(year, month, day);
-    return sales.filter(sale => {
+    return sales.filter((sale) => {
       const start = new Date(sale.startDate);
       const end = new Date(sale.endDate);
       return date >= start && date <= end;
@@ -49,10 +78,18 @@ export default function CalendarPage() {
 
   const today = new Date();
   const isToday = (day: number) => {
-    return day === today.getDate() && 
-           month === today.getMonth() && 
-           year === today.getFullYear();
+    return (
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    );
   };
+
+  // Get month's sales
+  const monthSales = sales.filter((sale) => {
+    const end = new Date(sale.endDate);
+    return end.getMonth() === month && end.getFullYear() === year;
+  });
 
   return (
     <>
@@ -69,100 +106,155 @@ export default function CalendarPage() {
           {/* Calendar Navigation */}
           <div className="calendar-nav">
             <button onClick={prevMonth} className="nav-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M15 18l-6-6 6-6"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
-            <h2 className="month-title">{monthNames[month]} {year}</h2>
+            <h2 className="month-title">
+              {monthNames[month]} {year}
+            </h2>
             <button onClick={nextMonth} className="nav-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
           </div>
 
-          {/* Calendar Grid */}
-          <div className="calendar-container">
-            <div className="calendar-weekdays">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="weekday">{day}</div>
-              ))}
+          {loading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Loading calendar...</p>
             </div>
-            
-            <div className="calendar-grid">
-              {calendarDays.map((day, index) => {
-                if (day === null) {
-                  return <div key={`empty-${index}`} className="calendar-day empty"></div>;
-                }
-                
-                const daySales = getSalesForDate(day);
-                const hasSales = daySales.length > 0;
-                
-                return (
-                  <div 
-                    key={day} 
-                    className={`calendar-day ${isToday(day) ? 'today' : ''} ${hasSales ? 'has-sales' : ''}`}
-                  >
-                    <span className="day-number">{day}</span>
-                    {hasSales && (
-                      <div className="day-sales">
-                        {daySales.slice(0, 3).map(sale => (
-                          <Link 
-                            href={`/sales/${sale.id}`} 
-                            key={sale.id}
-                            className="sale-dot"
-                            title={`${sale.brandName}: ${sale.title}`}
-                          >
-                            <span className="sale-badge">{sale.discountPercentage}%</span>
-                          </Link>
-                        ))}
-                        {daySales.length > 3 && (
-                          <span className="more-sales">+{daySales.length - 3}</span>
+          ) : (
+            <>
+              {/* Calendar Grid */}
+              <div className="calendar-container">
+                <div className="calendar-weekdays">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                    (day) => (
+                      <div key={day} className="weekday">
+                        {day}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <div className="calendar-grid">
+                  {calendarDays.map((day, index) => {
+                    if (day === null) {
+                      return (
+                        <div
+                          key={`empty-${index}`}
+                          className="calendar-day empty"
+                        ></div>
+                      );
+                    }
+
+                    const daySales = getSalesForDate(day);
+                    const hasSales = daySales.length > 0;
+
+                    return (
+                      <div
+                        key={day}
+                        className={`calendar-day ${
+                          isToday(day) ? "today" : ""
+                        } ${hasSales ? "has-sales" : ""}`}
+                      >
+                        <span className="day-number">{day}</span>
+                        {hasSales && (
+                          <div className="day-sales">
+                            {daySales.slice(0, 3).map((sale) => (
+                              <Link
+                                href={`/sales/${sale._id || sale.id}`}
+                                key={sale._id || sale.id}
+                                className="sale-dot"
+                                title={`${sale.brandName}: ${sale.title}`}
+                              >
+                                <span className="sale-badge">
+                                  {sale.discountPercentage}%
+                                </span>
+                              </Link>
+                            ))}
+                            {daySales.length > 3 && (
+                              <span className="more-sales">
+                                +{daySales.length - 3}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Legend */}
-          <div className="calendar-legend">
-            <div className="legend-item">
-              <span className="legend-dot today-dot"></span>
-              <span>Today</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-dot sale-dot-legend"></span>
-              <span>Active Sale</span>
-            </div>
-          </div>
+              {/* Legend */}
+              <div className="calendar-legend">
+                <div className="legend-item">
+                  <span className="legend-dot today-dot"></span>
+                  <span>Today</span>
+                </div>
+                <div className="legend-item">
+                  <span className="legend-dot sale-dot-legend"></span>
+                  <span>Active Sale</span>
+                </div>
+              </div>
 
-          {/* Upcoming Sales List */}
-          <div className="upcoming-section">
-            <h3>🔥 This Month's Sales</h3>
-            <div className="upcoming-grid">
-              {sales.filter(sale => {
-                const end = new Date(sale.endDate);
-                return end.getMonth() === month && end.getFullYear() === year;
-              }).slice(0, 6).map(sale => (
-                <Link href={`/sales/${sale.id}`} key={sale.id} className="upcoming-card">
-                  <div className="upcoming-discount">{sale.discountPercentage}%</div>
-                  <div className="upcoming-info">
-                    <span className="upcoming-brand">{sale.brandName}</span>
-                    <h4>{sale.title}</h4>
-                    <span className="upcoming-date">
-                      Ends: {new Date(sale.endDate).toLocaleDateString('en-PK', { 
-                        day: 'numeric', 
-                        month: 'short' 
-                      })}
-                    </span>
+              {/* Upcoming Sales List */}
+              <div className="upcoming-section">
+                <h3>🔥 This Month's Sales</h3>
+                {monthSales.length > 0 ? (
+                  <div className="upcoming-grid">
+                    {monthSales.slice(0, 6).map((sale) => (
+                      <Link
+                        href={`/sales/${sale._id || sale.id}`}
+                        key={sale._id || sale.id}
+                        className="upcoming-card"
+                      >
+                        <div className="upcoming-discount">
+                          {sale.discountPercentage}%
+                        </div>
+                        <div className="upcoming-info">
+                          <span className="upcoming-brand">
+                            {sale.brandName}
+                          </span>
+                          <h4>{sale.title}</h4>
+                          <span className="upcoming-date">
+                            Ends:{" "}
+                            {new Date(sale.endDate).toLocaleDateString(
+                              "en-PK",
+                              {
+                                day: "numeric",
+                                month: "short",
+                              }
+                            )}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+                ) : (
+                  <div className="no-sales">
+                    <p>No sales ending this month.</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -211,6 +303,31 @@ export default function CalendarPage() {
           font-size: 1.5rem;
           min-width: 200px;
           text-align: center;
+        }
+
+        .loading-container {
+          text-align: center;
+          padding: 4rem;
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border-color);
+          border-top-color: var(--primary-purple);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .loading-container p {
+          color: var(--text-secondary);
         }
 
         .calendar-container {
@@ -284,7 +401,7 @@ export default function CalendarPage() {
 
         .sale-badge {
           display: inline-block;
-          background: linear-gradient(135deg, #EF4444, #F97316);
+          background: linear-gradient(135deg, #ef4444, #f97316);
           color: white;
           font-size: 0.625rem;
           font-weight: 700;
@@ -324,7 +441,7 @@ export default function CalendarPage() {
         }
 
         .sale-dot-legend {
-          background: linear-gradient(135deg, #EF4444, #F97316);
+          background: linear-gradient(135deg, #ef4444, #f97316);
         }
 
         .upcoming-section {
@@ -385,6 +502,14 @@ export default function CalendarPage() {
         .upcoming-date {
           font-size: 0.75rem;
           color: var(--text-muted);
+        }
+
+        .no-sales {
+          text-align: center;
+          padding: 2rem;
+          background: var(--bg-light);
+          border-radius: var(--radius-xl);
+          color: var(--text-secondary);
         }
 
         @media (max-width: 1024px) {

@@ -44,6 +44,8 @@ export default function AdminBrandsPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Fetch brands
   useEffect(() => {
@@ -312,6 +314,36 @@ export default function AdminBrandsPage() {
     } catch (error) {
       console.error("Error rejecting brand:", error);
       alert("Failed to reject brand");
+    }
+  };
+
+  // Handle logo file upload
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("type", "brands");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFormData({ ...formData, logo: data.data.url });
+      } else {
+        alert(data.error || "Failed to upload logo");
+      }
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      alert("Failed to upload logo");
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -675,16 +707,36 @@ export default function AdminBrandsPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Logo URL *</label>
-                <input
-                  type="url"
-                  value={formData.logo}
-                  onChange={(e) =>
-                    setFormData({ ...formData, logo: e.target.value })
-                  }
-                  required
-                  placeholder="https://example.com/logo.png"
-                />
+                <label>Logo *</label>
+                <div className="logo-upload-area">
+                  {formData.logo && (
+                    <div className="logo-preview">
+                      <img src={formData.logo} alt="Logo preview" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={logoInputRef}
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleLogoUpload}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary upload-btn"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                  >
+                    {uploadingLogo
+                      ? "Uploading..."
+                      : formData.logo
+                      ? "Change Logo"
+                      : "Upload Logo"}
+                  </button>
+                  {formData.logo && (
+                    <span className="logo-url-hint">{formData.logo}</span>
+                  )}
+                </div>
               </div>
               <div className="form-group">
                 <label>Category *</label>

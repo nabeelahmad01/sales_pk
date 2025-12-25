@@ -38,8 +38,9 @@ export default function BrandReviewsPage() {
       const res = await fetch(`/api/reviews?brandId=${brandId}`);
       const data = await res.json();
       if (data.success) {
-        setReviews(data.data);
-        calculateStats(data.data);
+        const reviewsArray = Array.isArray(data.data) ? data.data : [];
+        setReviews(reviewsArray);
+        calculateStats(reviewsArray);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -49,12 +50,14 @@ export default function BrandReviewsPage() {
   };
 
   const calculateStats = (reviewsData: Review[]) => {
-    const total = reviewsData.length;
+    // Ensure reviewsData is an array
+    const data = Array.isArray(reviewsData) ? reviewsData : [];
+    const total = data.length;
     const average =
-      total > 0 ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / total : 0;
+      total > 0 ? data.reduce((sum, r) => sum + r.rating, 0) / total : 0;
 
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviewsData.forEach((r) => {
+    data.forEach((r) => {
       distribution[r.rating as keyof typeof distribution]++;
     });
 
