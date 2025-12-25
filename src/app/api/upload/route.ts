@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
+// Route segment config for Next.js 15+
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -71,9 +74,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Configure max file size for Next.js
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

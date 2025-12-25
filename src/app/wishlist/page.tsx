@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import SaleCard from '@/components/ui/SaleCard';
-import { sales } from '@/data/mockData';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import SaleCard from "@/components/ui/SaleCard";
+import { sales } from "@/data/mockData";
 
 interface SharedWishlist {
   userName: string;
@@ -13,16 +13,18 @@ interface SharedWishlist {
 
 function WishlistContent() {
   const searchParams = useSearchParams();
-  const wishlistId = searchParams.get('id');
-  const items = searchParams.get('items');
-  const name = searchParams.get('name');
-  
+  const wishlistId = searchParams.get("id");
+  const items = searchParams.get("items");
+  const name = searchParams.get("name");
+
   const [wishlistItems, setWishlistItems] = useState<typeof sales>([]);
 
   useEffect(() => {
     if (items) {
-      const itemIds = items.split(',');
-      const foundItems = sales.filter(sale => itemIds.includes(sale.id));
+      const itemIds = items.split(",");
+      const foundItems = sales.filter((sale) =>
+        itemIds.includes(sale._id || sale.id || "")
+      );
       setWishlistItems(foundItems);
     }
   }, [items]);
@@ -32,7 +34,9 @@ function WishlistContent() {
       <div className="empty-state">
         <h2>Invalid Wishlist Link</h2>
         <p>This wishlist link is invalid or has expired.</p>
-        <Link href="/sales" className="btn btn-primary">Browse Sales</Link>
+        <Link href="/sales" className="btn btn-primary">
+          Browse Sales
+        </Link>
       </div>
     );
   }
@@ -40,19 +44,17 @@ function WishlistContent() {
   return (
     <>
       <div className="wishlist-header">
-        <div className="wishlist-avatar">
-          {(name || 'A')[0].toUpperCase()}
-        </div>
+        <div className="wishlist-avatar">{(name || "A")[0].toUpperCase()}</div>
         <div>
-          <h1>{name ? `${name}'s Wishlist` : 'Shared Wishlist'}</h1>
+          <h1>{name ? `${name}'s Wishlist` : "Shared Wishlist"}</h1>
           <p>{wishlistItems.length} saved items</p>
         </div>
       </div>
 
       {wishlistItems.length > 0 ? (
         <div className="wishlist-grid">
-          {wishlistItems.map(sale => (
-            <SaleCard key={sale.id} sale={sale} />
+          {wishlistItems.map((sale) => (
+            <SaleCard key={sale._id || sale.id} sale={sale} />
           ))}
         </div>
       ) : (
@@ -64,7 +66,9 @@ function WishlistContent() {
       <div className="wishlist-cta">
         <h3>Want to create your own wishlist?</h3>
         <p>Sign up to save your favorite sales and share with friends!</p>
-        <Link href="/signup" className="btn btn-primary">Create Account</Link>
+        <Link href="/signup" className="btn btn-primary">
+          Create Account
+        </Link>
       </div>
     </>
   );
@@ -75,7 +79,9 @@ export default function SharedWishlistPage() {
     <>
       <div className="shared-wishlist-page">
         <div className="container">
-          <Suspense fallback={<div className="loading">Loading wishlist...</div>}>
+          <Suspense
+            fallback={<div className="loading">Loading wishlist...</div>}
+          >
             <WishlistContent />
           </Suspense>
         </div>
@@ -140,7 +146,11 @@ export default function SharedWishlistPage() {
         .wishlist-cta {
           margin-top: 3rem;
           text-align: center;
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+          background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.1),
+            rgba(236, 72, 153, 0.1)
+          );
           padding: 3rem;
           border-radius: var(--radius-2xl);
         }
