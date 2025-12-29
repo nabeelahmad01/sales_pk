@@ -1,0 +1,61 @@
+.featuredSection {
+  padding: 4rem 0;
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.03) 0%,
+    transparent 100%
+  );
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.sectionHeader h2 {
+  margin-bottom: 0.5rem;
+}
+
+.sectionHeader p {
+  color: var(--text-secondary);
+}
+
+.salesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.noSales {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 3rem;
+}
+
+@media (max-width: 1200px) {
+  .salesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .salesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .salesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    text-align: center;
+    justify-content: center;
+  }
+}

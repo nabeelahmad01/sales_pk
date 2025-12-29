@@ -35,7 +35,6 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="nav-links">
-            <Link href="/" className="nav-link">Home</Link>
             <Link href="/sales" className="nav-link">All Sales</Link>
             <Link href="/brands" className="nav-link">Brands</Link>
             <Link href="/categories" className="nav-link">Categories</Link>

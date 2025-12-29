@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Subscriber from '@/models/Subscriber';
+import { applyRateLimit, rateLimits } from '@/lib/rateLimit';
+import { validateEmail } from '@/lib/validation';
 
 // GET all subscribers
 export async function GET() {
@@ -22,19 +24,29 @@ export async function GET() {
 // POST new subscriber
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const rateLimitResponse = applyRateLimit(request, rateLimits.subscribe);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     await dbConnect();
     
     const { email } = await request.json();
     
-    if (!email) {
+    // Validate email
+    const validation = validateEmail(email);
+    if (!validation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Email is required' },
+        { success: false, error: validation.errors.join(', ') },
         { status: 400 }
       );
     }
     
+    const normalizedEmail = email.trim().toLowerCase();
+    
     // Check if already subscribed
-    const existing = await Subscriber.findOne({ email });
+    const existing = await Subscriber.findOne({ email: normalizedEmail });
     if (existing) {
       return NextResponse.json(
         { success: false, error: 'Email already subscribed' },
@@ -42,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const subscriber = await Subscriber.create({ email });
+    const subscriber = await Subscriber.create({ email: normalizedEmail });
     
     return NextResponse.json({ success: true, data: subscriber }, { status: 201 });
   } catch (error) {

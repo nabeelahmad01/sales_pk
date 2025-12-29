@@ -19,7 +19,7 @@ export default function Footer() {
   return (
     <footer className="footer">
       {/* Newsletter Section */}
-      <div className="newsletter-section">
+      {/* <div className="newsletter-section">
         <div className="container">
           <div className="newsletter-content">
             <div className="newsletter-text">
@@ -44,7 +44,7 @@ export default function Footer() {
             </form>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Footer */}
       <div className="footer-main">

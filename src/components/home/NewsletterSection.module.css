@@ -1,0 +1,152 @@
+.ctaSection {
+  padding: 4rem 0 6rem;
+}
+
+.ctaCard {
+  position: relative;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-2xl);
+  padding: 4rem;
+  text-align: center;
+  color: white;
+  overflow: hidden;
+}
+
+.ctaContent {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ctaCard h2 {
+  color: white;
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
+}
+
+.ctaCard p {
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.ctaForm {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.ctaInput {
+  padding: 1rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  width: 300px;
+}
+
+.ctaInput::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ctaInput:focus {
+  outline: none;
+  border-color: white;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ctaNote {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.subscribeSuccess {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+}
+
+.subscribeError {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+}
+
+.ctaDecoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.emojiFloat {
+  position: absolute;
+  font-size: 2rem;
+  animation: floatEmoji 6s ease-in-out infinite;
+}
+
+.emoji1 {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.emoji2 {
+  top: 30%;
+  right: 15%;
+  animation-delay: 1.5s;
+}
+
+.emoji3 {
+  bottom: 25%;
+  left: 15%;
+  animation-delay: 3s;
+}
+
+.emoji4 {
+  bottom: 20%;
+  right: 10%;
+  animation-delay: 4.5s;
+}
+
+@keyframes floatEmoji {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .ctaCard {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .ctaCard h2 {
+    font-size: 1.75rem;
+  }
+
+  .ctaForm {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ctaInput {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .emojiFloat {
+    display: none;
+  }
+}

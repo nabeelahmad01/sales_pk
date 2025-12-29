@@ -34,6 +34,7 @@ export interface Brand {
   website: string;
   category: string;
   isActive: boolean;
+  isVerified?: boolean;
   salesCount?: number;
   createdAt: string;
 }

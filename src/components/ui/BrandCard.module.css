@@ -1,0 +1,131 @@
+.brandCardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.brandCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 1.25rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+.brandCard:hover {
+  transform: translateX(8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.brandLogo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-light);
+}
+
+.brandLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brandInfo {
+  flex: 1;
+}
+
+.brandNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brandName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.brandCategory {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.brandStats {
+  margin-top: 0.5rem;
+}
+
+.salesCount {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.count {
+  font-weight: 700;
+  color: var(--primary-purple);
+}
+
+.brandArrow {
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.brandCard:hover .brandArrow {
+  color: var(--primary-purple);
+  transform: translateX(4px);
+}
+
+/* Dark mode */
+:global([data-theme="dark"]) .brandCard {
+  background: var(--bg-card);
+}
+
+@media (max-width: 480px) {
+  .brandCard {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .brandLogo {
+    width: 52px;
+    height: 52px;
+  }
+
+  .brandName {
+    font-size: 1rem;
+  }
+
+  .brandCategory {
+    font-size: 0.6875rem;
+  }
+
+  .salesCount {
+    font-size: 0.8125rem;
+  }
+
+  .brandArrow {
+    display: none;
+  }
+}

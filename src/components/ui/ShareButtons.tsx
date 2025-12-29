@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import styles from './ShareButtons.module.css';
 
 interface ShareButtonsProps {
   url: string;
@@ -26,6 +27,8 @@ export default function ShareButtons({
     whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
     twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedTitle}`,
   };
 
   const copyToClipboard = async () => {
@@ -38,15 +41,29 @@ export default function ShareButtons({
     }
   };
 
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: description || title,
+          url: fullUrl,
+        });
+      } catch (err) {
+        console.error("Share failed:", err);
+      }
+    }
+  };
+
   return (
-    <div className="share-buttons">
-      <span className="share-label">Share:</span>
+    <div className={styles.shareButtons}>
+      <span className={styles.shareLabel}>Share:</span>
 
       <a
         href={shareLinks.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
-        className="share-btn whatsapp"
+        className={`${styles.shareBtn} ${styles.whatsapp}`}
         title="Share on WhatsApp"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -58,7 +75,7 @@ export default function ShareButtons({
         href={shareLinks.facebook}
         target="_blank"
         rel="noopener noreferrer"
-        className="share-btn facebook"
+        className={`${styles.shareBtn} ${styles.facebook}`}
         title="Share on Facebook"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -70,7 +87,7 @@ export default function ShareButtons({
         href={shareLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
-        className="share-btn twitter"
+        className={`${styles.shareBtn} ${styles.twitter}`}
         title="Share on X (Twitter)"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -78,9 +95,21 @@ export default function ShareButtons({
         </svg>
       </a>
 
+      <a
+        href={shareLinks.linkedin}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${styles.shareBtn} ${styles.linkedin}`}
+        title="Share on LinkedIn"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </a>
+
       <button
         onClick={copyToClipboard}
-        className={`share-btn copy ${copied ? "copied" : ""}`}
+        className={`${styles.shareBtn} ${styles.copy} ${copied ? styles.copied : ''}`}
         title="Copy link"
       >
         {copied ? (
@@ -109,113 +138,24 @@ export default function ShareButtons({
         )}
       </button>
 
-      {copied && <span className="copied-toast">Link copied!</span>}
+      {/* Native Share button for mobile */}
+      {typeof navigator !== 'undefined' && 'share' in navigator && (
+        <button
+          onClick={handleNativeShare}
+          className={`${styles.shareBtn} ${styles.native}`}
+          title="Share"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      )}
 
-      <style jsx>{`
-        .share-buttons {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-        }
-
-        .share-label {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--text-secondary);
-        }
-
-        .share-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-decoration: none;
-        }
-
-        .share-btn.whatsapp {
-          background: #25d366;
-          color: white;
-        }
-
-        .share-btn.whatsapp:hover {
-          background: #128c7e;
-          transform: translateY(-2px);
-        }
-
-        .share-btn.facebook {
-          background: #1877f2;
-          color: white;
-        }
-
-        .share-btn.facebook:hover {
-          background: #0d65d9;
-          transform: translateY(-2px);
-        }
-
-        .share-btn.twitter {
-          background: #000;
-          color: white;
-        }
-
-        .share-btn.twitter:hover {
-          background: #333;
-          transform: translateY(-2px);
-        }
-
-        .share-btn.copy {
-          background: var(--bg-light);
-          color: var(--text-primary);
-          border: 2px solid var(--border-color);
-        }
-
-        .share-btn.copy:hover {
-          border-color: var(--primary-purple);
-          color: var(--primary-purple);
-          transform: translateY(-2px);
-        }
-
-        .share-btn.copy.copied {
-          background: #10b981;
-          color: white;
-          border-color: #10b981;
-        }
-
-        .copied-toast {
-          font-size: 0.75rem;
-          color: #10b981;
-          font-weight: 500;
-          animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateX(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @media (max-width: 480px) {
-          .share-buttons {
-            justify-content: center;
-          }
-
-          .share-label {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 0.25rem;
-          }
-        }
-      `}</style>
+      {copied && <span className={styles.copiedToast}>Link copied!</span>}
     </div>
   );
 }

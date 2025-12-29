@@ -8,6 +8,7 @@ export interface IBrand extends Document {
   website: string;
   category: string;
   isActive: boolean;
+  isVerified: boolean;
   // Authentication
   email?: string;
   password?: string;
@@ -31,6 +32,7 @@ const BrandSchema = new Schema<IBrand>(
     website: { type: String },
     category: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: false },
     // Authentication
     email: { type: String, unique: true, sparse: true },
     password: { type: String },

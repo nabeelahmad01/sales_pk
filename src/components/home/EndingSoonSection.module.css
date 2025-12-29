@@ -1,0 +1,116 @@
+.endingSection {
+  padding: 4rem 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.03) 100%
+  );
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.sectionHeader h2 {
+  margin-bottom: 0.5rem;
+}
+
+.sectionHeader p {
+  color: var(--text-secondary);
+}
+
+.endingGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.endingCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all var(--transition-normal);
+  border-left: 4px solid #ef4444;
+}
+
+.endingCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.endingTimer {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  min-width: 70px;
+}
+
+.timerValue {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.timerLabel {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.endingBrand {
+  font-size: 0.75rem;
+  color: var(--primary-purple);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.endingTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0.25rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.endingDiscount {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+@media (max-width: 1024px) {
+  .endingGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .endingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* Dark mode */
+:global([data-theme="dark"]) .endingCard {
+  background: var(--bg-card);
+}

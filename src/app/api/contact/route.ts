@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Contact from '@/models/Contact';
+import { applyRateLimit, rateLimits } from '@/lib/rateLimit';
+import { validateContact, sanitizeString } from '@/lib/validation';
 
 // GET all contact submissions (for admin)
 export async function GET() {
@@ -22,32 +24,31 @@ export async function GET() {
 // POST new contact submission
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const rateLimitResponse = applyRateLimit(request, rateLimits.contact);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     await dbConnect();
     
-    const { name, email, subject, message } = await request.json();
+    const body = await request.json();
     
-    // Validation
-    if (!name || !email || !subject || !message) {
+    // Validate input
+    const validation = validateContact(body);
+    if (!validation.valid) {
       return NextResponse.json(
-        { success: false, error: 'All fields are required' },
+        { success: false, error: validation.errors.join(', ') },
         { status: 400 }
       );
     }
     
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email address' },
-        { status: 400 }
-      );
-    }
-    
+    // Sanitize inputs
     const contact = await Contact.create({
-      name,
-      email,
-      subject,
-      message,
+      name: sanitizeString(body.name.trim()),
+      email: body.email.trim().toLowerCase(),
+      subject: sanitizeString(body.subject.trim()),
+      message: sanitizeString(body.message.trim()),
     });
     
     return NextResponse.json(
